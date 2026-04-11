@@ -11,7 +11,7 @@
 
 * **`docs/`**: Technical specifications, research notes, and architectural definitions.
 * **`scripts/`**: Build automation scripts and linker files (`linker.ld`) to define the kernel's memory layout.
-* **`src/boot/`**: The kernel entry point. 
+* **`src/boot/`**: The kernel entry point.
     * *Note:* While x86 uses Multiboot/GRUB, for **aarch64**, this handles Exception Level (EL) setup and initial CPU handoff from the bootloader.
 * **`src/kernel/`**: The architecture-independent logic (the "Brain").
     * **`cpu/`**: Logic for handling interrupts, exceptions, and the system tick.
