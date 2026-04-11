@@ -1,4 +1,4 @@
-ENTRY(_start)
+ENTRY(primary_entry)
 
 PHDRS
 {

@@ -1,8 +1,16 @@
+#define SYM_CODE_START(name) \
+    .global name;            \
+    .type name, %function;   \
+    name:
+
+#define SYM_CODE_END(name)               \
+    .size name, . - name
+
 /* Ensure the header is at the very beginning of the binary */
 .section ".header.arm64", "ax"
 .balign 8
 
-    b       _start          // code0: Jump to actual entry point
+    b       primary_entry   // code0: Jump to actual entry point
     .long   0               // code1: Reserved
     .quad   0               // text_offset: 0 means "place me at the start of RAM"
     .quad   0               // image_size: 0 is acceptable for simple loaders
@@ -14,9 +22,8 @@
     .long   0               // res5
 
 .section ".text"
-.global _start
 
-_start: 
+SYM_CODE_START(primary_entry)
     // 1. Only allow Core 0 to proceed
     mrs     x0, mpidr_el1
     and     x0, x0, #0xFF
@@ -27,7 +34,7 @@ _start:
     ldr     x0, =stack_top
     mov     sp, x0
 
-    // 3. Clear BSS (Recommended for C environments)
+    // 3. Clear BSS
     ldr     x0, =__bss_start
     ldr     x1, =__bss_size
 clear_bss:
@@ -37,8 +44,9 @@ clear_bss:
     bne     clear_bss
 
 jump_main:
-    bl      main           // Branch to your C kernel entry point
+    bl      main                // Branch to your C kernel entry point
 
 halt:
     wfe
     b       halt
+SYM_CODE_END(primary_entry)

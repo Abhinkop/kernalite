@@ -12,8 +12,8 @@ IMG_NAME ?= Image
 # -Wall -Wextra: Enable all warnings
 # -ffreestanding: No standard library environment
 # -nostdlib: Don't link against system libraries
-CFLAGS  = -Wall -Wextra -ffreestanding -nostdlib -nostartfiles -Isrc/include
-ASFLAGS =
+CFLAGS  = -c -Wall -Wextra -ffreestanding -nostdlib -nostartfiles -Isrc/include
+ASFLAGS = -c -x assembler-with-cpp
 LDFLAGS = -T scripts/linker.ld
 
 DEBUG_FLAGS = -g
@@ -76,8 +76,8 @@ $(BUILD_DIR)/%.o: $(SRC_DIR)/%.c
 # Compile assembly files
 $(BUILD_DIR)/%.o: $(SRC_DIR)/%.s
 	@mkdir -p $(dir $@)
-	@echo "AS  $<"
-	$(VERBOSE_PREFIX)$(AS) $(ASFLAGS) $< -o $@
+	@echo "CC  $<"
+	$(VERBOSE_PREFIX)$(CC) $(ASFLAGS) $< -o $@
 
 # Link the kernel
 $(TARGET_ELF): $(OBJS)
