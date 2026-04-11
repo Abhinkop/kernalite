@@ -12,8 +12,8 @@ IMG_NAME ?= Image
 # -Wall -Wextra: Enable all warnings
 # -ffreestanding: No standard library environment
 # -nostdlib: Don't link against system libraries
-CFLAGS  = -Wall -Wextra -ffreestanding -nostdlib -nostartfiles -Isrc/include
-ASFLAGS =
+CFLAGS  = -c -Wall -Wextra -ffreestanding -nostdlib -nostartfiles -Isrc/include
+ASFLAGS = -c -x assembler-with-cpp -Isrc/include
 LDFLAGS = -T scripts/linker.ld
 
 DEBUG_FLAGS = -g
@@ -36,7 +36,9 @@ TARGET_ELF = $(BUILD_DIR)/images/$(IMG_NAME).elf
 TARGET = $(BUILD_DIR)/images/$(IMG_NAME)
 
 # Source files
-SRCS_C  = $(SRC_DIR)/kernel/main.c
+SRCS_C  = $(SRC_DIR)/kernel/main.c \
+		  $(SRC_DIR)/kernel/panic.c \
+		  src/kernel/error/error_strings.c
 SRCS_AS = $(SRC_DIR)/boot/boot.s
 
 OBJS_C  = $(SRCS_C:$(SRC_DIR)/%.c=$(BUILD_DIR)/%.o)
@@ -76,14 +78,18 @@ $(BUILD_DIR)/%.o: $(SRC_DIR)/%.c
 # Compile assembly files
 $(BUILD_DIR)/%.o: $(SRC_DIR)/%.s
 	@mkdir -p $(dir $@)
-	@echo "AS  $<"
-	$(VERBOSE_PREFIX)$(AS) $(ASFLAGS) $< -o $@
+	@echo "CC  $<"
+	$(VERBOSE_PREFIX)$(CC) $(ASFLAGS) $< -o $@
 
 # Link the kernel
 $(TARGET_ELF): $(OBJS)
 	@mkdir -p $(dir $@)
 	@echo "LD  $@"
 	$(VERBOSE_PREFIX)$(LD) $(LDFLAGS) $(OBJS) -o $@
+
+format: $(SRCS_C) $(SRCS_AS)
+	@echo "Formatting source files..."
+	$(VERBOSE_PREFIX)clang-format -i $^
 
 clean:
 	rm -rf $(BUILD_DIR) $(TARGET) $(TARGET_ELF)
