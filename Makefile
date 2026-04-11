@@ -60,7 +60,7 @@ else
   POST_BUILD = @echo "STRIP $@"; $(STRIP) --strip-all $< -o $@
 endif
 
-.PHONY: all clean
+.PHONY: all clean docs clean-docs format
 all: $(TARGET)
 # Convert ELF to raw Binary
 $(TARGET): $(TARGET_ELF)
@@ -91,5 +91,15 @@ format: $(SRCS_C) $(SRCS_AS)
 	@echo "Formatting source files..."
 	$(VERBOSE_PREFIX)clang-format -i $^
 
-clean:
+docs:
+	@echo "Generating Doxygen documentation..."
+	@mkdir -p build/docs
+	@doxygen docs/Doxyfile
+	@echo "Documentation generated at build/docs/html/index.html"
+
+clean-docs:
+	@echo "Cleaning documentation..."
+	@rm -rf build/docs
+
+clean: clean-docs
 	rm -rf $(BUILD_DIR) $(TARGET) $(TARGET_ELF)

@@ -11,10 +11,6 @@
 #include "error/error_strings.h"
 #include <stdint.h>
 
-/**
- * @brief External low-level UART output function.
- * @param s Null-terminated string to be sent via UART.
- */
 extern void print_uart0(const char *s);
 
 /**

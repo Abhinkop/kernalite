@@ -10,8 +10,7 @@
 const char *error_to_string(long code) {
   switch (code) {
 /**
- * @inner
- * Internal X-Macro expansion to generate switch cases.
+ * @note Internal X-Macro expansion to generate switch cases.
  */
 #define X(val, str)                                                            \
   case val:                                                                    \
