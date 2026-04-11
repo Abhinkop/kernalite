@@ -1,52 +1,178 @@
-#define SYM_CODE_START(name) \
-    .global name;            \
-    .type name, %function;   \
-    name:
+/**
+ * @file boot.s
+ * @brief Low-level AArch64 bootstrapper and kernel entry point.
+ * @author Abhin Parekadan Jose
+ * @date 2024-06-01
+ * * This file handles the initial CPU state, sets up an emergency stack,
+ * clears the BSS section, and transitions execution to the C kernel.
+ */
 
-#define SYM_CODE_END(name)               \
-    .size name, . - name
+#include "error/error_codes.h"
 
-/* Ensure the header is at the very beginning of the binary */
+/* --- Macro Definitions --- */
+
+/**
+ * @brief Begins a function definition with global visibility.
+ * @param name Function name
+ */
+#define SYM_CODE_START(name)                                                   \
+  .global name;                                                                \
+  .type name, % function;                                                      \
+  name:
+
+/**
+ * @brief Ends a function definition and calculates its size.
+ * @param name Function name
+ */
+#define SYM_CODE_END(name) .size name, .- name
+
+/**
+ * @brief Store Literal: Stores a register value into a memory symbol.
+ * Uses PC-relative adrp/add for position independence.
+ */
+.macro  str_l, src, sym, tmp
+    adrp    \tmp, \sym
+    str     \src, [\tmp, :lo12:\sym]
+.endm
+
+/**
+ * @brief Load Literal: Loads a value from a memory symbol into a register.
+ */
+.macro  ldr_l, dst, sym, tmp
+    adrp    \tmp, \sym
+    ldr     \dst, [\tmp, :lo12:\sym]
+.endm
+
+#define EL1_VALUE 0x4 /* CurrentEL value for EL1: (0b01 << 2) */
+
+/**
+ * @brief Switches to emergency stack and calls the C panic handler.
+ * @param error_code The numeric code to pass to panic_print_c.
+ */
+.macro panic_print error_code
+    mov     x20, x30                            // Preserve return address in scratch register
+    adrp    x1, emergency_stack_top             // Load emergency stack top
+    add     sp, x1, :lo12:emergency_stack_top
+    stp     x29, x20, [sp, #-16]!               // Create stack frame (16-byte aligned)
+    mov     x29, sp
+    ldr     x0, =\error_code                    // Load error code into first arg register
+    bl      panic_print_c                       // Call C implementation
+    ldp     x29, x30, [sp], #16                 // Restore frame and return address
+.endm
+
+/**
+ * @brief Debug utility to print a register's value via UART.
+ * @param reg0 The register to be printed (e.g., x19).
+ */
+.macro debug_print_reg reg0
+    mov     x20, x30
+    adrp    x1, emergency_stack_top
+    add     sp, x1, :lo12:emergency_stack_top
+    stp     x29, x20, [sp, #-16]!
+    mov     x29, sp
+    mov     x0, \reg0                           // Move target register to x0 for C call
+    bl      print_hex
+    ldp     x29, x30, [sp], #16
+.endm
+
+/**
+ * @brief Asserts that two registers are equal; panics otherwise.
+ * @param reg1 First register to compare
+ * @param reg2 Second register to compare
+ * @param error_code Code to print on failure
+ */
+.macro assert_eq reg1, reg2, error_code
+    cmp     \reg1, \reg2
+    b.eq    1f                                  // Forward jump to local label 1 if equal
+    panic_print \error_code                     // Call panic macro
+2:  wfe                                         // Wait for event (Halt)
+    b       2b                                  // Infinite loop
+1:  nop
+.endm
+
+/* --- Data Section --- */
+
+.section .data
+.balign 16
+/**
+ * @brief Emergency stack for early boot/panic scenarios.
+ * AArch64 requires 16-byte alignment for the stack pointer.
+ */
+emergency_stack:
+    .space 256
+emergency_stack_top:
+
+/* --- Boot Header --- */
+
+/**
+ * @section .header.arm64
+ * Standard Linux ARM64 Image Header for bootloader compatibility.
+ */
 .section ".header.arm64", "ax"
 .balign 8
+    b       primary_entry   // Jump to actual entry point
+    .long   0               // Reserved
+    .quad   0               // Text offset
+    .quad   0               // Image size
+    .quad   0xA             // Flags (Little Endian, 4KB Pages)
+    .quad   0, 0, 0         // Reserved
+    .ascii  "ARM\x64"       // Magic number
+    .long   0               // Reserved
 
-    b       primary_entry   // code0: Jump to actual entry point
-    .long   0               // code1: Reserved
-    .quad   0               // text_offset: 0 means "place me at the start of RAM"
-    .quad   0               // image_size: 0 is acceptable for simple loaders
-    .quad   0xA             // flags: LE, 4K Page, Phys placement anywhere
-    .quad   0               // res2
-    .quad   0               // res3
-    .quad   0               // res4
-    .ascii  "ARM\x64"       // magic: Magic number
-    .long   0               // res5
+/* --- Text Section --- */
 
 .section ".text"
 
+/**
+ * @brief Primary kernel entry point.
+ * Performs core-gating, basic HW init, BSS clearing, and jumps to main().
+ */
 SYM_CODE_START(primary_entry)
-    // 1. Only allow Core 0 to proceed
+    // 1. Core Gating: Only Core 0 continues
     mrs     x0, mpidr_el1
     and     x0, x0, #0xFF
     cbnz    x0, halt
 
-    // 2. Setup Stack
-    // The stack pointer MUST be 16-byte aligned on AArch64
+    bl      mmu_off                // Ensure MMU is disabled
+    bl      setup_cache            // Initialize/Clean caches
+
+    // 2. Set up Primary Stack
     ldr     x0, =stack_top
     mov     sp, x0
 
-    // 3. Clear BSS
+    // 3. Zero out the BSS section
     ldr     x0, =__bss_start
     ldr     x1, =__bss_size
 clear_bss:
-    cbz     x1, jump_main
-    str     xzr, [x0], #8
+    cbz     x1, jump_main          // If size is 0, skip
+    str     xzr, [x0], #8          // Store Zero Register (64-bit) and post-index
     subs    x1, x1, #1
     bne     clear_bss
 
 jump_main:
-    bl      main                // Branch to your C kernel entry point
+    bl      main                   // Enter C environment
 
 halt:
     wfe
     b       halt
 SYM_CODE_END(primary_entry)
+
+/**
+ * @brief Disables the MMU and verifies current Exception Level.
+ */
+SYM_CODE_START(mmu_off)
+    mrs     x19, CurrentEL
+    ldr     x0, =EL1_VALUE
+    assert_eq x19, x0, ERROR_CODE_NOT_EL1
+    mrs     x19, sctlr_el1         // Read System Control Register
+    debug_print_reg x19
+    // Note: MMU disabling logic (bic/msr) should be added here
+    ret
+SYM_CODE_END(mmu_off)
+
+/**
+ * @brief Placeholder for cache initialization logic.
+ */
+SYM_CODE_START(setup_cache)
+    ret
+SYM_CODE_END(setup_cache)
