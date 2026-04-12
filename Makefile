@@ -60,7 +60,7 @@ else
   POST_BUILD = @echo "STRIP $@"; $(STRIP) --strip-all $< -o $@
 endif
 
-.PHONY: all clean docs clean-docs format
+.PHONY: all clean docs clean-docs format clang-tidy clang-tidy-fix
 all: $(TARGET)
 # Convert ELF to raw Binary
 $(TARGET): $(TARGET_ELF)
@@ -90,6 +90,14 @@ $(TARGET_ELF): $(OBJS)
 format: $(SRCS_C) $(SRCS_AS)
 	@echo "Formatting source files..."
 	$(VERBOSE_PREFIX)clang-format -i $^
+
+clang-tidy: $(SRCS_C)
+	@echo "Running clang-tidy..."
+	$(VERBOSE_PREFIX)clang-tidy $^ -- $(CFLAGS)
+
+clang-tidy-fix: $(SRCS_C)
+	@echo "Running clang-tidy..."
+	$(VERBOSE_PREFIX)clang-tidy $^ --fix -- $(CFLAGS)
 
 docs:
 	@echo "Generating Doxygen documentation..."

@@ -7,20 +7,21 @@
 
 #include "error/error_strings.h"
 
-const char *error_to_string(long code) {
-  switch (code) {
+const char *error_to_string(long code)
+{
+	switch (code) {
 /**
  * @note Internal X-Macro expansion to generate switch cases.
  */
-#define X(val, str)                                                            \
-  case val:                                                                    \
-    return str;
+#define X(val, str) \
+	case val:   \
+		return str;
 
-    /* Expand the map defined in the header */
-    STRING_MAP
+		/* Expand the map defined in the header */
+		STRING_MAP
 
 #undef X
-  default:
-    return "UNKNOWN";
-  }
+	default:
+		return "UNKNOWN";
+	}
 }

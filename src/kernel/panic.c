@@ -11,19 +11,25 @@
 #include "error/error_strings.h"
 #include <stdint.h>
 
-extern void print_uart0(const char *s);
+extern void print_uart0(const char *str);
 
 /**
  * @brief Converts a 4-bit nibble to a hex character and prints it.
- * * @param d The digit to print (0-15).
+ * * @param digit The digit to print (0-15).
  * @note This function uses a compound literal to pass a temporary string
  * to the UART driver.
  */
-void print_hex_digit(uint8_t d) {
-  if (d < 10)
-    print_uart0((char[]){d + '0', 0});
-  else
-    print_uart0((char[]){d - 10 + 'A', 0});
+void print_hex_digit(uint8_t digit)
+{
+	const uint8_t ten = 10;
+	const uint8_t ascii_0 = (uint8_t)'0';
+	const uint8_t ascii_upper_a = (uint8_t)'A';
+	// NOLINTBEGIN(bugprone-narrowing-conversions)
+	if (digit < 10)
+		print_uart0((const char[]){ digit + ascii_0, 0 });
+	else
+		print_uart0((const char[]){ digit - ten + ascii_upper_a, 0 });
+	// NOLINTEND(bugprone-narrowing-conversions)
 }
 
 /**
@@ -32,11 +38,12 @@ void print_hex_digit(uint8_t d) {
  * significant bit to least significant bit.
  * * @param val The 64-bit value to be printed.
  */
-void print_hex(uint64_t val) {
-  print_uart0("0x");
-  for (int i = 60; i >= 0; i -= 4) {
-    print_hex_digit((val >> i) & 0xF);
-  }
+void print_hex(uint64_t val)
+{
+	print_uart0("0x");
+	for (int i = 60; i >= 0; i -= 4) {
+		print_hex_digit((val >> i) & 0xF);
+	}
 }
 
 /**
@@ -47,13 +54,14 @@ void print_hex(uint64_t val) {
  * * @param code The numeric error code representing the failure type.
  * @see error_to_string
  */
-void panic_print_c(long code) {
-  print_uart0("\r\n!!! KERNEL PANIC !!!\r\n");
-  print_uart0("Error Code:    ");
-  print_hex(code);
+void panic_print_c(long code)
+{
+	print_uart0("\r\n!!! KERNEL PANIC !!!\r\n");
+	print_uart0("Error Code:    ");
+	print_hex(code);
 
-  print_uart0("\r\nError Message: ");
-  print_uart0(error_to_string(code));
+	print_uart0("\r\nError Message: ");
+	print_uart0(error_to_string(code));
 
-  print_uart0("\r\nHalting system.\r\n");
+	print_uart0("\r\nHalting system.\r\n");
 }

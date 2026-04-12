@@ -15,10 +15,10 @@
  * @brief Begins a function definition with global visibility.
  * @param name Function name
  */
-#define SYM_CODE_START(name)                                                   \
-  .global name;                                                                \
-  .type name, % function;                                                      \
-  name:
+#define SYM_CODE_START(name)    \
+	.global name;           \
+	.type name, % function; \
+name:
 
 /**
  * @brief Ends a function definition and calculates its size.
