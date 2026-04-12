@@ -60,8 +60,8 @@ else
   POST_BUILD = @echo "STRIP $@"; $(STRIP) --strip-all $< -o $@
 endif
 
-.PHONY: all clean docs clean-docs format clang-tidy clang-tidy-fix
-all: $(TARGET)
+.PHONY: all clean docs clean-docs format clang-tidy clang-tidy-fix clean-subdirs tools/register_decoder
+all: $(TARGET) tools/register_decoder
 # Convert ELF to raw Binary
 $(TARGET): $(TARGET_ELF)
 	@mkdir -p $(dir $@)
@@ -114,5 +114,9 @@ clean-docs:
 	@echo "Cleaning documentation..."
 	@rm -rf build/docs
 
+tools/register_decoder:
+	$(VERBOSE_PREFIX)$(MAKE) -C $@  BUILD_DIR=../../$(BUILD_DIR)
+
 clean: clean-docs
-	rm -rf $(BUILD_DIR) $(TARGET) $(TARGET_ELF)
+	@echo "Cleaning build directory..."
+	$(VERBOSE_PREFIX)rm -rf $(BUILD_DIR) $(TARGET) $(TARGET_ELF)
