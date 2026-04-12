@@ -30,14 +30,6 @@ format: $(SRC) $(SRC_H)
 	@echo "Formatting source files..."
 	$(VERBOSE_PREFIX)clang-format -i $^
 
-clang-tidy: $(SRC)
-	@echo "Running clang-tidy..."
-	$(VERBOSE_PREFIX)clang-tidy $^ -- $(CFLAGS)
-
-clang-tidy-fix: $(SRC)
-	@echo "Running clang-tidy..."
-	$(VERBOSE_PREFIX)clang-tidy $^ --fix -- $(CFLAGS)
-
 clean:
 	@echo "Cleaning build directory..."
 	$(VERBOSE_PREFIX)rm -rf $(BUILD_DIR)/tools/register_decoder

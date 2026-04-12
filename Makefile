@@ -37,8 +37,9 @@ TARGET = $(BUILD_DIR)/images/$(IMG_NAME)
 
 # Source files
 SRCS_C  = $(SRC_DIR)/kernel/main.c \
-		  $(SRC_DIR)/kernel/panic.c \
-		  src/kernel/error/error_strings.c
+		  $(SRC_DIR)/kernel/error/panic.c \
+		  $(SRC_DIR)/kernel/error/error_strings.c
+
 SRCS_AS = $(SRC_DIR)/boot/boot.s
 
 OBJS_C  = $(SRCS_C:$(SRC_DIR)/%.c=$(BUILD_DIR)/%.o)

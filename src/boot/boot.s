@@ -43,6 +43,34 @@ name:
     ldr     \dst, [\tmp, :lo12:\sym]
 .endm
 
+/*
+* @dst: destination register (64 bit wide)
+* @sym: name of the symbol
+*/
+.macro	adr_l, dst, sym
+adrp	\dst, \sym
+add	\dst, \dst, :lo12:\sym
+.endm
+
+/*
+ * read_ctr - read CTR_EL0. If the system has mismatched register fields,
+ * provide the system wide safe value from arm64_ftr_reg_ctrel0.sys_val
+ */
+.macro	read_ctr, reg
+mrs	\reg, ctr_el0			// read CTR
+nop
+.endm
+
+/*
+ * dcache_line_size - get the safe D-cache line size across all CPUs
+ */
+.macro	dcache_line_size, reg, tmp
+read_ctr	\tmp
+ubfm		\tmp, \tmp, #16, #19	// cache line size encoding
+mov		\reg, #4		// bytes per word
+lsl		\reg, \reg, \tmp	// actual cache line size
+.endm
+
 #define EL1_VALUE 0x4 /* CurrentEL value for EL1: (0b01 << 2) */
 
 /**
@@ -129,9 +157,19 @@ emergency_stack_top:
  */
 SYM_CODE_START(primary_entry)
     // 1. Core Gating: Only Core 0 continues
-    mrs     x0, mpidr_el1
-    and     x0, x0, #0xFF
-    cbnz    x0, halt
+    mrs     x19, mpidr_el1
+    and     x19, x19, #0xFF
+    cbnz    x19, halt
+
+    // Save boot arguments (x0 .. x3) for main()
+    mov	x21, x0				// x21=FDT
+
+	adr_l	x0, boot_args			// record the contents of
+	stp	x21, x1, [x0]			// x0 .. x3 at kernel entry
+	stp	x2, x3, [x0, #16]
+    dmb	sy
+    add	x1, x0, #0x20			// 4 x 8 bytes
+	bl	dcache_inval_poc
 
     bl      setup_sctlr_el1
 
@@ -149,6 +187,8 @@ clear_bss:
     bne     clear_bss
 
 jump_main:
+
+    adr_l	x0, boot_args		// Pass pointer to boot_args as first argument to main()
     bl      main                   // Enter C environment
 
 halt:
@@ -191,3 +231,33 @@ SYM_CODE_START(setup_sctlr_el1)
     isb
     ret
 SYM_CODE_END(setup_sctlr_el1)
+
+/*
+ *	dcache_inval_poc(start, end)
+ *
+ * 	Ensure that any D-cache lines for the interval [start, end)
+ * 	are invalidated. Any partial lines at the ends of the interval are
+ *	also cleaned to PoC to prevent data loss.
+ *
+ *	- start   - kernel start address of region
+ *	- end     - kernel end address of region
+ */
+SYM_CODE_START(dcache_inval_poc)
+	dcache_line_size x2, x3
+	sub	x3, x2, #1
+	tst	x1, x3				// end cache line aligned?
+	bic	x1, x1, x3
+	b.eq	1f
+	dc	civac, x1			// clean & invalidate D / U line
+1:	tst	x0, x3				// start cache line aligned?
+	bic	x0, x0, x3
+	b.eq	2f
+	dc	civac, x0			// clean & invalidate D / U line
+	b	3f
+2:	dc	ivac, x0			// invalidate D / U line
+3:	add	x0, x0, x2
+	cmp	x0, x1
+	b.lo	2b
+	dsb	sy
+	ret
+SYM_CODE_END(dcache_inval_poc)
