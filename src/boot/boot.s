@@ -133,8 +133,7 @@ SYM_CODE_START(primary_entry)
     and     x0, x0, #0xFF
     cbnz    x0, halt
 
-    bl      mmu_off                // Ensure MMU is disabled
-    bl      setup_cache            // Initialize/Clean caches
+    bl      setup_sctlr_el1
 
     // 2. Set up Primary Stack
     ldr     x0, =stack_top
@@ -160,19 +159,35 @@ SYM_CODE_END(primary_entry)
 /**
  * @brief Disables the MMU and verifies current Exception Level.
  */
-SYM_CODE_START(mmu_off)
+SYM_CODE_START(setup_sctlr_el1)
+
+#define SCTLR_EL1_64_MMU 0
+#define SCTLR_EL1_64_ALIGN_CHECK 1
+#define SCTLR_EL1_64_D_CACHE 2
+#define SCTLR_EL1_64_I_CACHE 12
+#define SCTLR_EL1_64_EOE 24
+#define SCTLR_EL1_64_EE 25
+
     mrs     x19, CurrentEL
     ldr     x0, =EL1_VALUE
     assert_eq x19, x0, ERROR_CODE_NOT_EL1
-    mrs     x19, sctlr_el1         // Read System Control Register
-    debug_print_reg x19
-    // Note: MMU disabling logic (bic/msr) should be added here
-    ret
-SYM_CODE_END(mmu_off)
 
-/**
- * @brief Placeholder for cache initialization logic.
- */
-SYM_CODE_START(setup_cache)
+    mrs     x19, sctlr_el1
+
+    ldr     x0, =1 << SCTLR_EL1_64_MMU 
+    bic     x19, x19, x0 // MMU diabled (bit 0 = 0)
+    ldr     x0, =1 << SCTLR_EL1_64_ALIGN_CHECK
+    orr     x19, x19, x0 // Enable alignment check (bit 1 = 1)
+    ldr     x0, =1 << SCTLR_EL1_64_D_CACHE
+    bic     x19, x19, x0 // D-cache disabled (bit 2 = 0)
+    ldr     x0, =1 << SCTLR_EL1_64_I_CACHE
+    orr     x19, x19, x0 // I-cache enabled (bit 12 = 1)
+    ldr     x0, =1 << SCTLR_EL1_64_EOE
+    bic     x19, x19, x0 // Endianness of exceptions = Little Endian (bit 24 = 0)
+    ldr     x0, =1 << SCTLR_EL1_64_EE
+    bic     x19, x19, x0 // Endianness of instructions = Little Endian (bit 25 = 0)
+
+    msr     sctlr_el1, x19
+    isb
     ret
-SYM_CODE_END(setup_cache)
+SYM_CODE_END(setup_sctlr_el1)
