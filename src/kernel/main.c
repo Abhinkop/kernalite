@@ -10,6 +10,10 @@
 
 #include <stdint.h>
 
+#include "linker/symblos.h"
+
+#define FDT_MAGIC 0xedfe0dd0 // 0xd00dfeed in Little Endian
+
 /**
  * @brief UART0 Data Register (MMIO).
  * * This pointer accesses the hardware's transmit/receive buffer.
@@ -34,14 +38,35 @@ void print_uart0(const char *str)
 	}
 }
 
+int is_valid_fdt(uint64_t phys_addr)
+{
+	// 1. Cast the physical address to a pointer
+	// (Note: This only works if the address is already mapped or MMU is off)
+	uint32_t *ptr = (uint32_t *)phys_addr;
+
+	// 2. Check the first 4 bytes for the magic number
+	if (*ptr == FDT_MAGIC) {
+		return 1; // Valid FDT
+	}
+
+	return 0; // Not an FDT
+}
+
 /**
  * @brief Kernel Main Entry Point.
  * * Called from primary_entry (boot.s) after the stack has been initialized
  * and the BSS section has been cleared.
  * * @note This function should never return.
  */
-void main()
+void main(const uint64_t *boot_args_ptr)
 {
+	if (is_valid_fdt(boot_args_ptr[0])) {
+		// FDT is valid, you can parse it here or pass it to other functions
+		print_uart0("Valid FDT\n");
+	} else {
+		// Handle invalid FDT case (e.g., print an error message)
+		print_uart0("Invalid FDT\n");
+	}
 	print_uart0("Hello World!\n");
 
 	/* System should not return; if it does, boot.s handles it with a halt loop.

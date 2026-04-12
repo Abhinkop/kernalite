@@ -43,6 +43,34 @@ name:
     ldr     \dst, [\tmp, :lo12:\sym]
 .endm
 
+/*
+* @dst: destination register (64 bit wide)
+* @sym: name of the symbol
+*/
+.macro	adr_l, dst, sym
+adrp	\dst, \sym
+add	\dst, \dst, :lo12:\sym
+.endm
+
+/*
+ * read_ctr - read CTR_EL0. If the system has mismatched register fields,
+ * provide the system wide safe value from arm64_ftr_reg_ctrel0.sys_val
+ */
+.macro	read_ctr, reg
+mrs	\reg, ctr_el0			// read CTR
+nop
+.endm
+
+/*
+ * dcache_line_size - get the safe D-cache line size across all CPUs
+ */
+.macro	dcache_line_size, reg, tmp
+read_ctr	\tmp
+ubfm		\tmp, \tmp, #16, #19	// cache line size encoding
+mov		\reg, #4		// bytes per word
+lsl		\reg, \reg, \tmp	// actual cache line size
+.endm
+
 #define EL1_VALUE 0x4 /* CurrentEL value for EL1: (0b01 << 2) */
 
 /**
@@ -129,12 +157,21 @@ emergency_stack_top:
  */
 SYM_CODE_START(primary_entry)
     // 1. Core Gating: Only Core 0 continues
-    mrs     x0, mpidr_el1
-    and     x0, x0, #0xFF
-    cbnz    x0, halt
+    mrs     x19, mpidr_el1
+    and     x19, x19, #0xFF
+    cbnz    x19, halt
 
-    bl      mmu_off                // Ensure MMU is disabled
-    bl      setup_cache            // Initialize/Clean caches
+    // Save boot arguments (x0 .. x3) for main()
+    mov	x21, x0				// x21=FDT
+
+	adr_l	x0, boot_args			// record the contents of
+	stp	x21, x1, [x0]			// x0 .. x3 at kernel entry
+	stp	x2, x3, [x0, #16]
+    dmb	sy
+    add	x1, x0, #0x20			// 4 x 8 bytes
+	bl	dcache_inval_poc
+
+    bl      setup_sctlr_el1
 
     // 2. Set up Primary Stack
     ldr     x0, =stack_top
@@ -150,6 +187,8 @@ clear_bss:
     bne     clear_bss
 
 jump_main:
+
+    adr_l	x0, boot_args		// Pass pointer to boot_args as first argument to main()
     bl      main                   // Enter C environment
 
 halt:
@@ -160,19 +199,65 @@ SYM_CODE_END(primary_entry)
 /**
  * @brief Disables the MMU and verifies current Exception Level.
  */
-SYM_CODE_START(mmu_off)
+SYM_CODE_START(setup_sctlr_el1)
+
+#define SCTLR_EL1_64_MMU 0
+#define SCTLR_EL1_64_ALIGN_CHECK 1
+#define SCTLR_EL1_64_D_CACHE 2
+#define SCTLR_EL1_64_I_CACHE 12
+#define SCTLR_EL1_64_EOE 24
+#define SCTLR_EL1_64_EE 25
+
     mrs     x19, CurrentEL
     ldr     x0, =EL1_VALUE
     assert_eq x19, x0, ERROR_CODE_NOT_EL1
-    mrs     x19, sctlr_el1         // Read System Control Register
-    debug_print_reg x19
-    // Note: MMU disabling logic (bic/msr) should be added here
-    ret
-SYM_CODE_END(mmu_off)
 
-/**
- * @brief Placeholder for cache initialization logic.
- */
-SYM_CODE_START(setup_cache)
+    mrs     x19, sctlr_el1
+
+    ldr     x0, =1 << SCTLR_EL1_64_MMU 
+    bic     x19, x19, x0 // MMU diabled (bit 0 = 0)
+    ldr     x0, =1 << SCTLR_EL1_64_ALIGN_CHECK
+    orr     x19, x19, x0 // Enable alignment check (bit 1 = 1)
+    ldr     x0, =1 << SCTLR_EL1_64_D_CACHE
+    bic     x19, x19, x0 // D-cache disabled (bit 2 = 0)
+    ldr     x0, =1 << SCTLR_EL1_64_I_CACHE
+    orr     x19, x19, x0 // I-cache enabled (bit 12 = 1)
+    ldr     x0, =1 << SCTLR_EL1_64_EOE
+    bic     x19, x19, x0 // Endianness of exceptions = Little Endian (bit 24 = 0)
+    ldr     x0, =1 << SCTLR_EL1_64_EE
+    bic     x19, x19, x0 // Endianness of instructions = Little Endian (bit 25 = 0)
+
+    msr     sctlr_el1, x19
+    isb
     ret
-SYM_CODE_END(setup_cache)
+SYM_CODE_END(setup_sctlr_el1)
+
+/*
+ *	dcache_inval_poc(start, end)
+ *
+ * 	Ensure that any D-cache lines for the interval [start, end)
+ * 	are invalidated. Any partial lines at the ends of the interval are
+ *	also cleaned to PoC to prevent data loss.
+ *
+ *	- start   - kernel start address of region
+ *	- end     - kernel end address of region
+ */
+SYM_CODE_START(dcache_inval_poc)
+	dcache_line_size x2, x3
+	sub	x3, x2, #1
+	tst	x1, x3				// end cache line aligned?
+	bic	x1, x1, x3
+	b.eq	1f
+	dc	civac, x1			// clean & invalidate D / U line
+1:	tst	x0, x3				// start cache line aligned?
+	bic	x0, x0, x3
+	b.eq	2f
+	dc	civac, x0			// clean & invalidate D / U line
+	b	3f
+2:	dc	ivac, x0			// invalidate D / U line
+3:	add	x0, x0, x2
+	cmp	x0, x1
+	b.lo	2b
+	dsb	sy
+	ret
+SYM_CODE_END(dcache_inval_poc)

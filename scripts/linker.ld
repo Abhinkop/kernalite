@@ -23,6 +23,14 @@ SECTIONS
         . = ALIGN(16);
         __bss_end = .;
     } :data_perm
+    .data.page_tables : {
+        init_idmap_pg_dir = .;
+        /* * Reserve 16KB (4 pages).
+         * This allows for L0, L1, and potentially L2/L3 if needed later.
+         */
+        . += 16384;
+        init_idmap_pg_end = .;
+    }
     __bss_size = (__bss_end - __bss_start) >> 3;
 
     /* Define a small stack area (16KB) */

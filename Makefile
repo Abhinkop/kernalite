@@ -37,8 +37,9 @@ TARGET = $(BUILD_DIR)/images/$(IMG_NAME)
 
 # Source files
 SRCS_C  = $(SRC_DIR)/kernel/main.c \
-		  $(SRC_DIR)/kernel/panic.c \
-		  src/kernel/error/error_strings.c
+		  $(SRC_DIR)/kernel/error/panic.c \
+		  $(SRC_DIR)/kernel/error/error_strings.c
+
 SRCS_AS = $(SRC_DIR)/boot/boot.s
 
 OBJS_C  = $(SRCS_C:$(SRC_DIR)/%.c=$(BUILD_DIR)/%.o)
@@ -60,8 +61,8 @@ else
   POST_BUILD = @echo "STRIP $@"; $(STRIP) --strip-all $< -o $@
 endif
 
-.PHONY: all clean docs clean-docs format clang-tidy clang-tidy-fix
-all: $(TARGET)
+.PHONY: all clean docs clean-docs format clang-tidy clang-tidy-fix clean-subdirs tools/register_decoder
+all: $(TARGET) tools/register_decoder
 # Convert ELF to raw Binary
 $(TARGET): $(TARGET_ELF)
 	@mkdir -p $(dir $@)
@@ -87,6 +88,11 @@ $(TARGET_ELF): $(OBJS)
 	@echo "LD  $@"
 	$(VERBOSE_PREFIX)$(LD) $(LDFLAGS) $(OBJS) -o $@
 
+run: $(TARGET)
+	@echo "Running QEMU..."
+	$(VERBOSE_PREFIX)qemu-system-aarch64 -machine virt \
+	-cpu cortex-a57 -nographic -kernel $(TARGET)
+
 format: $(SRCS_C) $(SRCS_AS)
 	@echo "Formatting source files..."
 	$(VERBOSE_PREFIX)clang-format -i $^
@@ -109,5 +115,9 @@ clean-docs:
 	@echo "Cleaning documentation..."
 	@rm -rf build/docs
 
+tools/register_decoder:
+	$(VERBOSE_PREFIX)$(MAKE) -C $@  BUILD_DIR=../../$(BUILD_DIR)
+
 clean: clean-docs
-	rm -rf $(BUILD_DIR) $(TARGET) $(TARGET_ELF)
+	@echo "Cleaning build directory..."
+	$(VERBOSE_PREFIX)rm -rf $(BUILD_DIR) $(TARGET) $(TARGET_ELF)
