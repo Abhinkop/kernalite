@@ -87,6 +87,11 @@ $(TARGET_ELF): $(OBJS)
 	@echo "LD  $@"
 	$(VERBOSE_PREFIX)$(LD) $(LDFLAGS) $(OBJS) -o $@
 
+run: $(TARGET)
+	@echo "Running QEMU..."
+	$(VERBOSE_PREFIX)qemu-system-aarch64 -machine virt \
+	-cpu cortex-a57 -nographic -kernel $(TARGET)
+
 format: $(SRCS_C) $(SRCS_AS)
 	@echo "Formatting source files..."
 	$(VERBOSE_PREFIX)clang-format -i $^
