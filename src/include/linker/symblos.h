@@ -8,6 +8,9 @@
  * * @author Abhin Parekadan Jose
  */
 
+#ifndef UTILS_SYMBOLS_H
+#define UTILS_SYMBOLS_H
+
 #include <stdint.h>
 
 /**
@@ -49,3 +52,5 @@ extern void* init_idmap_pg_dir;
 extern void* init_idmap_pg_end;
 
 /** @} */
+
+#endif /* UTILS_SYMBOLS_H */

@@ -5,8 +5,8 @@
  * @date 2024-06-01
  */
 
-#ifndef ERROR_STRINGS_H
-#define ERROR_STRINGS_H
+#ifndef ERROR_ERROR_STRINGS_H
+#define ERROR_ERROR_STRINGS_H
 
 #include "error_codes.h"
 
@@ -36,4 +36,4 @@
  */
 const char *error_to_string(long code);
 
-#endif /* ERROR_STRINGS_H */
+#endif /* ERROR_ERROR_STRINGS_H */
