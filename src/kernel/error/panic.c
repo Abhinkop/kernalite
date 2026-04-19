@@ -11,7 +11,29 @@
 #include "error/error_strings.h"
 #include <stdint.h>
 
-extern void print_uart0(const char *str);
+/**
+ * @brief UART0 Data Register (MMIO).
+ * * This pointer accesses the hardware's transmit/receive buffer.
+ * It is marked 'volatile' to prevent the compiler from optimizing out
+ * repeated writes to the same memory location, which are necessary
+ * for hardware communication.
+ */
+volatile unsigned int *const uart0_dr = (unsigned int *)0x09000000;
+
+/**
+ * @brief Transmits a null-terminated string over UART0.
+ * * This function performs a simple polling-based write. It does not
+ * check for FIFO status (TX Full), assuming the baud rate/buffer is
+ * sufficient for early boot strings.
+ * * @param str A pointer to the null-terminated ASCII string to be printed.
+ */
+void print_uart0(const char *str)
+{
+	while (*str != '\0') { /* Loop until end of string */
+		*uart0_dr = (unsigned int)(*str); /* Transmit char */
+		str++; /* Next char */
+	}
+}
 
 /**
  * @brief Converts a 4-bit nibble to a hex character and prints it.

@@ -175,6 +175,7 @@ SYM_CODE_START(primary_entry)
 
     // 2. Set up Primary Stack
     ldr     x0, =stack_top
+    and x0, x0, #~0xf  // Ensure 16-byte alignment
     mov     sp, x0
 
     // 3. Zero out the BSS section

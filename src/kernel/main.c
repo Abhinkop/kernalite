@@ -8,48 +8,31 @@
  * ARM-based systems.
  */
 
+#include <stddef.h>
 #include <stdint.h>
+#include <libfdt.h>
 
 #include "linker/symblos.h"
+#include "utils/fdt.h"
+#include "utils/printf.h"
+#include "drivers/uart.h"
 
-#define FDT_MAGIC 0xedfe0dd0 // 0xd00dfeed in Little Endian
+uart_device_t uart0; // Global UART device instance for early boot logging
 
-/**
- * @brief UART0 Data Register (MMIO).
- * * This pointer accesses the hardware's transmit/receive buffer.
- * It is marked 'volatile' to prevent the compiler from optimizing out
- * repeated writes to the same memory location, which are necessary
- * for hardware communication.
- */
-volatile unsigned int *const uart0_dr = (unsigned int *)0x09000000;
-
-/**
- * @brief Transmits a null-terminated string over UART0.
- * * This function performs a simple polling-based write. It does not
- * check for FIFO status (TX Full), assuming the baud rate/buffer is
- * sufficient for early boot strings.
- * * @param str A pointer to the null-terminated ASCII string to be printed.
- */
-void print_uart0(const char *str)
-{
-	while (*str != '\0') { /* Loop until end of string */
-		*uart0_dr = (unsigned int)(*str); /* Transmit char */
-		str++; /* Next char */
-	}
-}
-
-int is_valid_fdt(uint64_t phys_addr)
+bool is_valid_fdt(uint64_t phys_addr)
 {
 	// 1. Cast the physical address to a pointer
-	// (Note: This only works if the address is already mapped or MMU is off)
-	uint32_t *ptr = (uint32_t *)phys_addr;
+	// NOLINTNEXTLINE(*-int-to-ptr)
+	void *ptr = (void *)phys_addr;
+	const int ret = fdt_check_header(ptr);
+	return ret == 0;
+}
 
-	// 2. Check the first 4 bytes for the magic number
-	if (*ptr == FDT_MAGIC) {
-		return 1; // Valid FDT
-	}
-
-	return 0; // Not an FDT
+// NOLINTNEXTLINE(misc-include-cleaner)
+void putchar(char chr)
+{
+	// NOLINTNEXTLINE(misc-include-cleaner)
+	uart0.putc(&uart0, chr);
 }
 
 /**
@@ -60,14 +43,30 @@ int is_valid_fdt(uint64_t phys_addr)
  */
 void main(const uint64_t *boot_args_ptr)
 {
+	pl011_init(&uart0, 0x09000000);
+	set_serial_console((serial_t){ .putc = putchar, .getc = NULL });
+	Memory_map_t mmap;
+	// NOLINTNEXTLINE(*-int-to-ptr)
+	int ret = get_mem((const void *)boot_args_ptr[0], &mmap);
+	if (ret < 0) {
+		printf("Failed to parse FDT memory map\n");
+	} else {
+		printf("Memory Map (%d regions):\n", mmap.count);
+
+		for (int i = 0; i < mmap.count; i++) {
+			printf("Region %d: Base=0x%lx, Size=0x%lx\n", i,
+			       (unsigned long)mmap.regions[i].base,
+			       (unsigned long)mmap.regions[i].size);
+		}
+	}
 	if (is_valid_fdt(boot_args_ptr[0])) {
 		// FDT is valid, you can parse it here or pass it to other functions
-		print_uart0("Valid FDT\n");
+		printf("Valid FDT\n");
 	} else {
 		// Handle invalid FDT case (e.g., print an error message)
-		print_uart0("Invalid FDT\n");
+		printf("Invalid FDT\n");
 	}
-	print_uart0("Hello World!\n");
+	printf("Hello World!\n");
 
 	/* System should not return; if it does, boot.s handles it with a halt loop.
    */
