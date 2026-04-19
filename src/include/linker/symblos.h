@@ -42,14 +42,27 @@ uint64_t boot_args[4];
  * linker script for the initial Level 0 translation table.
  * @note This address must be 4KB (granule) aligned.
  */
-extern void* init_idmap_pg_dir;
+extern void *init_idmap_pg_dir;
 
 /**
  * @brief End of the identity map page directory region.
  * * Used to calculate the total size of the reserved page table area
  * for initialization (e.g., zeroing memory via memset) and bounds checking.
  */
-extern void* init_idmap_pg_end;
+extern void *init_idmap_pg_end;
+
+/**
+ * @brief The starting address of the kernel image.
+ * Matches the beginning of the .text section.
+ */
+extern uint8_t kernel_start;
+
+/**
+ * @brief The end address of the kernel image.
+ * This is typically placed after the .bss section and any alignment padding.
+ * Memory after this address is generally considered available for the page allocator.
+ */
+extern uint8_t kernel_end;
 
 /** @} */
 

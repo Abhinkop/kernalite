@@ -11,6 +11,7 @@ SECTIONS
 {
     /* QEMU loads the kernel at 0x40000000 for aarch64 virt */
 	. = 0x40000000;
+    kernel_start = .;
 
 	.header . : { KEEP(*(.header.arm64)) } :text_perm
 	.text : { *(.text) } :text_perm
@@ -39,5 +40,5 @@ SECTIONS
         stack_top = .;
     }
 
-    _end = .;
+    kernel_end = .;
 }

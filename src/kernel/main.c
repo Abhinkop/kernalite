@@ -16,6 +16,7 @@
 #include "utils/fdt.h"
 #include "utils/printf.h"
 #include "drivers/uart.h"
+#include "allocator/page_allocater.h"
 
 uart_device_t uart0; // Global UART device instance for early boot logging
 
@@ -35,6 +36,18 @@ void putchar(char chr)
 	uart0.putc(&uart0, chr);
 }
 
+void print_kernel_bounds()
+{
+	uintptr_t start = (uintptr_t)&kernel_start;
+	uintptr_t end = (uintptr_t)&kernel_end;
+
+	size_t kernel_size = end - start;
+
+	printf("Kernel Start: 0x%lx\n", start);
+	printf("Kernel End:   0x%lx\n", end);
+	printf("Kernel Size:  %u bytes\n", kernel_size);
+}
+
 /**
  * @brief Kernel Main Entry Point.
  * * Called from primary_entry (boot.s) after the stack has been initialized
@@ -45,6 +58,7 @@ void main(const uint64_t *boot_args_ptr)
 {
 	pl011_init(&uart0, 0x09000000);
 	set_serial_console((serial_t){ .putc = putchar, .getc = NULL });
+	print_kernel_bounds();
 	Memory_map_t mmap;
 	// NOLINTNEXTLINE(*-int-to-ptr)
 	int ret = get_mem((const void *)boot_args_ptr[0], &mmap);
@@ -52,16 +66,39 @@ void main(const uint64_t *boot_args_ptr)
 		printf("Failed to parse FDT memory map\n");
 	} else {
 		printf("Memory Map (%d regions):\n", mmap.count);
-
 		for (int i = 0; i < mmap.count; i++) {
 			printf("Region %d: Base=0x%lx, Size=0x%lx\n", i,
 			       (unsigned long)mmap.regions[i].base,
 			       (unsigned long)mmap.regions[i].size);
+
+			uintptr_t region_base = (uintptr_t)mmap.regions[i].base;
+			uintptr_t region_size = (uintptr_t)mmap.regions[i].size;
+			uintptr_t region_end = region_base + region_size;
+
+			uintptr_t k_end = (uintptr_t)&kernel_end;
+
+			// Only use regions that actually contain or follow the kernel
+			if (region_end > k_end) {
+				// If the kernel is inside this region, start allocator after kernel
+				uintptr_t alloc_start = (region_base > k_end) ?
+								region_base :
+								k_end;
+				size_t alloc_size = region_end - alloc_start;
+
+				printf("Initializing allocator for Region %d:\n",
+				       i);
+				printf("  Start: 0x%lx, Size: 0x%lx\n",
+				       alloc_start, alloc_size);
+
+				// NOLINTNEXTLINE(*-int-to-ptr)
+				page_init((void *)alloc_start, alloc_size);
+			}
 		}
 	}
 	if (is_valid_fdt(boot_args_ptr[0])) {
 		// FDT is valid, you can parse it here or pass it to other functions
 		printf("Valid FDT\n");
+		page_dump_status();
 	} else {
 		// Handle invalid FDT case (e.g., print an error message)
 		printf("Invalid FDT\n");
