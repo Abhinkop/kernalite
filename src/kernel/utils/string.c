@@ -152,4 +152,6 @@ unsigned long strtoul(const char *nptr, char **endptr, int base)
 	return res;
 }
 
+__typeof(strtoul) __isoc23_strtoul __attribute__((alias("strtoul")));
+
 // NOLINTEND(bugprone-easily-swappable-parameters)
