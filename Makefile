@@ -69,7 +69,7 @@ ifeq ($(BUILD_TYPE),debug)
   CFLAGS += $(DEBUG_FLAGS)
 else
   CFLAGS += $(RELEASE_FLAGS)
-  POST_BUILD = @echo "STRIP $@"; $(STRIP) --strip-all $< -o $@
+  POST_BUILD = @echo "STRIP $@"; $(STRIP) --strip-all $<
 endif
 
 # --- libfdt ---
@@ -98,9 +98,9 @@ all: $(TARGET) tools/register_decoder
 # Convert ELF to raw Binary
 $(TARGET): $(TARGET_ELF)
 	@mkdir -p $(dir $@)
+	$(VERBOSE_PREFIX)$(POST_BUILD)
 	@echo "OBJCOPY $@"
 	$(VERBOSE_PREFIX)$(OBJCOPY) -O binary $< $@
-	$(VERBOSE_PREFIX)$(POST_BUILD)
 
 # Compile C files
 $(BUILD_DIR)/%.o: $(SRC_DIR)/%.c
