@@ -19,6 +19,16 @@
 #include "allocator/page_allocater.h"
 #include "mmu/page_table.h"
 
+#define READ_SYS_REG(reg, val)                             \
+	do {                                               \
+		asm volatile("mrs %0, " #reg : "=r"(val)); \
+	} while (0)
+
+#define WRITE_SYS_REG(reg, val)                                \
+	do {                                                   \
+		asm volatile("msr " #reg ", %0" : : "r"(val)); \
+	} while (0)
+
 uart_device_t uart0; // Global UART device instance for early boot logging
 
 // NOLINTNEXTLINE(misc-include-cleaner)
@@ -58,7 +68,7 @@ void setup_mair()
 	// Attribute 0: Device-nGnRE (standard for MMIO/UART)
 	// Attribute 1: Normal Memory, Outer/Inner Write-Back Non-transient
 	uint64_t mair = (0x00 << 0) | (0xFF << 8);
-	asm volatile("msr mair_el1, %0" : : "r"(mair));
+	WRITE_SYS_REG(mair_el1, mair);
 }
 
 void setup_tcr()
@@ -76,7 +86,7 @@ void setup_tcr()
 	// Recommended: Disable TTBR1 to prevent the MMU from hunting in upper addresses
 	tcr |= (1ULL << 23); // EPD1: Disable table walks for TTBR1
 
-	asm volatile("msr tcr_el1, %0" : : "r"(tcr));
+	WRITE_SYS_REG(tcr_el1, tcr);
 	asm volatile("isb");
 }
 
@@ -90,12 +100,14 @@ void enable_mmu(uintptr_t l0_phys_addr)
 	setup_tcr();
 
 	// Set the table pointer
-	asm volatile("msr ttbr0_el1, %0" : : "r"(l0_phys_addr));
+	WRITE_SYS_REG(ttbr0_el1, l0_phys_addr);
 	asm volatile("isb");
+
+	printf("Setting ttbr0_el1 = %p\n", l0_phys_addr);
 
 	// Read System Control Register
 	uint64_t sctlr;
-	asm volatile("mrs %0, sctlr_el1" : "=r"(sctlr));
+	READ_SYS_REG(sctlr_el1, sctlr);
 
 	// Enable MMU (bit 0) and Data Cache (bit 2) and Instruction Cache (bit 12)
 	sctlr |= (1 << 0) | (1 << 2) | (1 << 12);
@@ -142,10 +154,15 @@ void init_mmu(uint64_t mem_start, size_t mem_size)
 		kernel_l0->entries[i] = 0;
 	}
 
+	setup_identity_map(kernel_l0, l0_phys_addr, PAGE_SIZE,
+			   PTE_AF | (1ULL << 2));
+
 	uintptr_t k_start = (uintptr_t)mem_start;
 	uintptr_t k_end = (uintptr_t)&kernel_end;
 	size_t k_size =
-		k_end - k_start + (2 *PAGE_SIZE); // Ensure we cover the entire kernel with page alignment
+		k_end - k_start +
+		(2 *
+		 PAGE_SIZE); // Ensure we cover the entire kernel with page alignment
 	k_size &= ~(PAGE_SIZE - 1); // Align to page boundary
 
 	if (k_size > mem_size) {
@@ -162,9 +179,39 @@ void init_mmu(uint64_t mem_start, size_t mem_size)
 	setup_identity_map(kernel_l0, 0x09000000, PAGE_SIZE,
 			   PTE_AF | PTE_MEMATTR_NC);
 
-	page_table_dump(kernel_l0);
+	// page_table_dump(kernel_l0);
 
 	enable_mmu(l0_phys_addr);
+	page_table_dump(kernel_l0);
+}
+
+void duplicate_uart_mapping()
+{
+	uintptr_t ttbr0 = 0;
+
+	READ_SYS_REG(ttbr0_el1, ttbr0);
+	printf("ttbr0_el1 = %p\n", ttbr0);
+	page_table_dump((page_table_t *)ttbr0);
+
+	// uintptr_t new_va = 0x019000000;
+
+	// printf("MMU: new mapping uart: 0x%lx - 0x%lx\n", new_va,
+	//        new_va + PAGE_SIZE);
+	// // map_page((page_table_t *)ttbr0, new_va, 0x09000000,
+	// // 	 PTE_AF | PTE_MEMATTR_NC);
+
+	// asm volatile("dsb sy\n\t" // Complete all memory writes
+	// 	     "isb\n\t" // Flush pipeline
+	// 	     :
+	// 	     :
+	// 	     : "memory");
+
+	// uart_device_t uart1;
+
+	// pl011_init(&uart1, new_va);
+	// uart1.putc(&uart1, 'H');
+	// uart1.putc(&uart1, 'i');
+	// uart1.putc(&uart1, '\n');
 }
 
 /**
@@ -212,7 +259,7 @@ void main(const uint64_t *boot_args_ptr)
 	page_dump_status();
 
 	printf("Hello World!\n");
-
+	duplicate_uart_mapping();
 	/* System should not return; if it does, boot.s handles it with a halt loop.
    */
 }
