@@ -1,3 +1,4 @@
+// clang-format off
 .section .text
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -125,7 +126,6 @@ curr_el_sp0_irq:
 curr_el_sp0_fiq:
 curr_el_sp0_serror:
 
-curr_el_curr_sp_sync:
 curr_el_curr_sp_irq:
 curr_el_curr_sp_serror:
 curr_el_curr_sp_fiq:
@@ -142,3 +142,14 @@ lower_el_32_serror:
     SAVE_REGS
     bl generic_handler
     RESTORE_REGS
+
+curr_el_curr_sp_sync:
+    SAVE_REGS
+
+    mrs x0, ESR_EL1        // reason
+    mrs x1, FAR_EL1        // fault address
+    mrs x2, ELR_EL1        // return address
+
+    bl curr_el_curr_sp_sync_handler
+    RESTORE_REGS
+// clang-format off
