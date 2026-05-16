@@ -1,8 +1,12 @@
 /**
  * @file error_strings.c
- * @brief Implementation of the error code to string translation.
+ * @brief Implementation of error code to string translation.
+ *
+ * Provides the run-time mapping from numeric kernel error codes to human-
+ * readable messages used by diagnostic subsystems.
+ *
  * @author Abhin Parekadan Jose
- * @date 2024-06-01
+ * @date 2026-04-11
  */
 
 #include "error/error_strings.h"

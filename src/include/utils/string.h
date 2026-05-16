@@ -1,8 +1,12 @@
 /**
  * @file string.h
  * @brief Minimal string and memory manipulation functions for bare-metal AArch64.
- * * This file provides the "glue" required by libfdt and other external libraries
- * when operating in a freestanding environment without a standard C library.
+ *
+ * Provides essential string and memory helpers used by the kernel and linked
+ * external libraries in a freestanding runtime environment.
+ *
+ * @author Abhin Parekadan Jose
+ * @date 2026-05-16
  */
 
 #ifndef UTILS_STRING_H

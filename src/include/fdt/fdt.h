@@ -1,7 +1,12 @@
 /**
  * @file fdt.h
- * @brief Header that interfaces with libfdt for Device Tree Blob (DTB) parsing
- * and validation.
+ * @brief Header that interfaces with libfdt for Device Tree Blob (DTB) parsing.
+ *
+ * Declares the kernel-facing FDT helper APIs used to validate and extract memory
+ * mapping information from the device tree.
+ *
+ * @author Abhin Parekadan Jose
+ * @date 2026-05-16
  */
 
 #ifndef FDT_FDT_H

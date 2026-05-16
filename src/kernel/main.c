@@ -1,11 +1,12 @@
 /**
  * @file main.c
  * @brief Main kernel entry point and primitive UART driver.
+ *
+ * Handles early kernel initialization, UART setup, FDT parsing, page
+ * allocator bootstrapping, and the transition into the kernel runtime loop.
+ *
  * @author Abhin Parekadan Jose
- * @date 2024-06-01
- * * This file contains the initialization sequence for the C environment
- * and a basic polling-based UART driver for QEMU 'virt' board or similar
- * ARM-based systems.
+ * @date 2026-04-11
  */
 
 #include "linker/symblos.h"

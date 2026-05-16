@@ -1,7 +1,12 @@
 /**
  * @file symblos.h
  * @brief Symbol definitions from the linker script.
+ *
+ * Declares the linker-provided symbols used by the kernel to locate the image
+ * bounds, zero page allocator bitmap, and other layout metadata.
+ *
  * @author Abhin Parekadan Jose
+ * @date 2026-04-12
  */
 #ifndef LINKER_SYMBLOS_H
 #define LINKER_SYMBLOS_H

@@ -1,8 +1,12 @@
 /**
- * @file Kprintf.h
+ * @file kprintf.h
  * @brief Utility functions for formatted output and serial console management.
- * * Provides a freestanding implementation of Kprintf, a kernel-level printf
- * tailored for kernel-level debugging and serial communication.
+ *
+ * Provides a freestanding implementation of kprintf for kernel-level debugging
+ * and serial console output in a freestanding environment.
+ *
+ * @author Abhin Parekadan Jose
+ * @date 2026-05-16
  */
 
 #ifndef UTILS_KPRINTF_H

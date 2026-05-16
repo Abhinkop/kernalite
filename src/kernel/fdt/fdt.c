@@ -1,6 +1,12 @@
 /**
  * @file fdt.c
  * @brief Implementation of Device Tree Blob (FDT) parsing and validation functions.
+ *
+ * Validates the FDT header, extracts memory map entries, and exposes kernel
+ * helpers for consuming device tree data.
+ *
+ * @author Abhin Parekadan Jose
+ * @date 2026-05-16
  */
 
 #include "fdt/fdt.h"

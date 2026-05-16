@@ -1,6 +1,12 @@
 /**
- * @file string.chr
- * @brief Implementation of minimal string functions.
+ * @file string.c
+ * @brief Implementation of minimal string and memory helper functions.
+ *
+ * Provides a small set of freestanding string and memory operations required
+ * by the kernel and linked external libraries.
+ *
+ * @author Abhin Parekadan Jose
+ * @date 2026-05-16
  */
 
 #include "utils/string.h"

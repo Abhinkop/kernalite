@@ -2,9 +2,11 @@
  * @file page_allocator.h
  * @brief Physical page allocator for managing system memory blocks.
  *
- * This module handles the allocation and deallocation of fixed-size memory pages
- * (4 KiB). It tracks free and used physical frames within the provided
- * memory range.
+ * This module handles allocation and deallocation of fixed-size 4 KiB pages,
+ * tracks page usage with a bitmap, and exposes the kernel page allocator API.
+ *
+ * @author Abhin Parekadan Jose
+ * @date 2026-05-16
  */
 
 #ifndef ALLOCATOR_PAGE_ALLOCATOR_H

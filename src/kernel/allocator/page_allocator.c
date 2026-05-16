@@ -1,3 +1,16 @@
+/**
+ * @file page_allocator.c
+ * @brief Physical page allocator implementation using a bitmap.
+ *
+ * This module implements a simple physical page allocator backed by a
+ * linker-reserved bitmap region. It provides initialization, reservation,
+ * allocation, freeing and status dump helpers used by the kernel early
+ * memory management.
+ *
+ * @author Abhin Parekadan Jose
+ * @date 2026-05-16
+ */
+
 #include "allocator/page_allocator.h"
 
 #include <stdint.h>
