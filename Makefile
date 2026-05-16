@@ -47,11 +47,13 @@ SRCS_C  = $(SRC_DIR)/kernel/main.c \
 		  $(SRC_DIR)/kernel/utils/fdt.c \
 		  $(SRC_DIR)/kernel/utils/printf.c \
 		  $(SRC_DIR)/kernel/drivers/uart.c \
+		  $(SRC_DIR)/kernel/exception_handling/handler.c \
 		  $(SRC_DIR)/kernel/allocator/page_allocater.c \
 		  $(SRC_DIR)/kernel/utils/string.c \
 		  $(SRC_DIR)/kernel/mmu/page_table.c
 
-SRCS_AS = $(SRC_DIR)/boot/boot.s
+SRCS_AS = $(SRC_DIR)/boot/boot.s \
+		  $(SRC_DIR)/kernel/exception_handling/vector.s
 
 OBJS_C  = $(SRCS_C:$(SRC_DIR)/%.c=$(BUILD_DIR)/%.o)
 OBJS_AS = $(SRCS_AS:$(SRC_DIR)/%.s=$(BUILD_DIR)/%.o)

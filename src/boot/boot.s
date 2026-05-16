@@ -173,6 +173,9 @@ SYM_CODE_START(primary_entry)
 
     bl      setup_sctlr_el1
 
+    // Setup exception vectors.
+    bl     install_vectors
+
     // 2. Set up Primary Stack
     ldr     x0, =stack_top
     and x0, x0, #~0xf  // Ensure 16-byte alignment
