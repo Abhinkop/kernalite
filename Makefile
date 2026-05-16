@@ -12,7 +12,7 @@ IMG_NAME ?= Image
 # -Wall -Wextra: Enable all warnings
 # -ffreestanding: No standard library environment
 # -nostdlib: Don't link against system libraries
-CFLAGS  = -c -Wall -Wextra -ffreestanding -nostdlib -nostartfiles -Isrc/include
+CFLAGS  = -c -Wall -Wextra -ffreestanding -nostdlib -nostartfiles -Isrc/include -mgeneral-regs-only
 ASFLAGS = -c -x assembler-with-cpp -Isrc/include
 LDFLAGS = -T scripts/linker.ld
 
@@ -37,6 +37,7 @@ TARGET = $(BUILD_DIR)/images/$(IMG_NAME)
 
 # Source files
 SRCS_C  = $(SRC_DIR)/kernel/main.c \
+		  $(SRC_DIR)/kernel/drivers/uart.c \
 		  $(SRC_DIR)/kernel/error/panic.c \
 		  $(SRC_DIR)/kernel/error/error_strings.c
 
