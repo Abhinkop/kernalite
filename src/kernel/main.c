@@ -11,43 +11,35 @@
 #include <stdint.h>
 
 #include "linker/symblos.h"
+#include "drivers/uart.h"
+#include "utils/kprintf.h"
+#include <stdio.h>
 
 #define FDT_MAGIC 0xedfe0dd0 // 0xd00dfeed in Little Endian
 
+static uart_device_t uart0;
 /**
- * @brief UART0 Data Register (MMIO).
- * * This pointer accesses the hardware's transmit/receive buffer.
- * It is marked 'volatile' to prevent the compiler from optimizing out
- * repeated writes to the same memory location, which are necessary
- * for hardware communication.
+ * @brief UART0 Character Output Function.
+ * * This function is designed to be used as the 'putc' function in the
+ * serial_t structure for kprintf. It abstracts the hardware-specific details
+ * of writing a character to the UART0 data register.
+ * * @param chr The character to be transmitted over UART0.
  */
-volatile unsigned int *const uart0_dr = (unsigned int *)0x09000000;
-
-/**
- * @brief Transmits a null-terminated string over UART0.
- * * This function performs a simple polling-based write. It does not
- * check for FIFO status (TX Full), assuming the baud rate/buffer is
- * sufficient for early boot strings.
- * * @param str A pointer to the null-terminated ASCII string to be printed.
- */
-void print_uart0(const char *str)
+void uart0_putchar(char chr)
 {
-	while (*str != '\0') { /* Loop until end of string */
-		*uart0_dr = (unsigned int)(*str); /* Transmit char */
-		str++; /* Next char */
-	}
+	uart0.putc(&uart0, chr);
 }
 
-int is_valid_fdt(uint64_t phys_addr)
+int is_valid_fdt(uintptr_t phys_addr)
 {
 	// 1. Cast the physical address to a pointer
 	// (Note: This only works if the address is already mapped or MMU is off)
+	// NOLINTNEXTLINE(*-int-to-ptr)
 	uint32_t *ptr = (uint32_t *)phys_addr;
 
 	// 2. Check the first 4 bytes for the magic number
-	if (*ptr == FDT_MAGIC) {
+	if (*ptr == FDT_MAGIC)
 		return 1; // Valid FDT
-	}
 
 	return 0; // Not an FDT
 }
@@ -60,14 +52,16 @@ int is_valid_fdt(uint64_t phys_addr)
  */
 void main(const uint64_t *boot_args_ptr)
 {
+	pl011_init(&uart0, 0x09000000);
+	set_kprintf_console((serial_t){ .putc = uart0_putchar, .getc = NULL });
 	if (is_valid_fdt(boot_args_ptr[0])) {
 		// FDT is valid, you can parse it here or pass it to other functions
-		print_uart0("Valid FDT\n");
+		kprintf("Valid FDT\n");
 	} else {
 		// Handle invalid FDT case (e.g., print an error message)
-		print_uart0("Invalid FDT\n");
+		kprintf("Invalid FDT\n");
 	}
-	print_uart0("Hello World!\n");
+	kprintf("Hello World!\n");
 
 	/* System should not return; if it does, boot.s handles it with a halt loop.
    */

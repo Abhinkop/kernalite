@@ -39,7 +39,8 @@ TARGET = $(BUILD_DIR)/images/$(IMG_NAME)
 SRCS_C  = $(SRC_DIR)/kernel/main.c \
 		  $(SRC_DIR)/kernel/drivers/uart.c \
 		  $(SRC_DIR)/kernel/error/panic.c \
-		  $(SRC_DIR)/kernel/error/error_strings.c
+		  $(SRC_DIR)/kernel/error/error_strings.c \
+		  $(SRC_DIR)/kernel/utils/kprintf.c
 
 SRCS_AS = $(SRC_DIR)/boot/boot.s
 
