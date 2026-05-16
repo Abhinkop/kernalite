@@ -38,3 +38,11 @@ RUN mkdir -p ${TOOLCHAIN_DIR} && \
     rm arm-gnu-toolchain-${ARM_TOOLCHAIN_VERSION}-x86_64-aarch64-none-elf.tar.xz
 
 ENV PATH="${TOOLCHAIN_DIR}/bin:${PATH}"
+
+RUN echo '\n\
+# Git aliases\n\
+alias gp="git push -f"\n\
+alias gir="git rebase -i --autosquash"\n\
+alias gmr="git rebase main"\n\
+\n\
+' >> /home/vscode/.bashrc
