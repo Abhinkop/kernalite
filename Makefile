@@ -8,12 +8,14 @@ STRIP   = $(CROSS_COMPILE)strip
 
 IMG_NAME ?= Image
 
+INCLUDES = -Isrc/include
+
 # Flags
 # -Wall -Wextra: Enable all warnings
 # -ffreestanding: No standard library environment
 # -nostdlib: Don't link against system libraries
-CFLAGS  = -c -Wall -Wextra -ffreestanding -nostdlib -Isrc/include -mgeneral-regs-only
-ASFLAGS = -c -x assembler-with-cpp -Isrc/include
+CFLAGS  = -c -Wall -Wextra -ffreestanding -nostdlib -mgeneral-regs-only
+ASFLAGS = -c -x assembler-with-cpp
 LDFLAGS = -T scripts/linker.ld
 
 DEBUG_FLAGS = -g
@@ -41,7 +43,8 @@ SRCS_C  = $(SRC_DIR)/kernel/main.c \
 		  $(SRC_DIR)/kernel/error/panic.c \
 		  $(SRC_DIR)/kernel/error/error_strings.c \
 		  $(SRC_DIR)/kernel/exception_handling/handler.c \
-		  $(SRC_DIR)/kernel/utils/kprintf.c
+		  $(SRC_DIR)/kernel/utils/kprintf.c \
+		  $(SRC_DIR)/kernel/utils/string.c
 
 SRCS_AS = $(SRC_DIR)/boot/boot.s \
 		  $(SRC_DIR)/kernel/exception_handling/vector.s
@@ -65,8 +68,33 @@ else
   POST_BUILD = $(VERBOSE_PREFIX)$(STRIP) --strip-all $<
 endif
 
-.PHONY: all clean docs clean-docs format clang-tidy clang-tidy-fix clean-subdirs tools/register_decoder
-all: $(TARGET) tools/register_decoder
+# --- libfdt ---
+LIBFDT_DIR = ./external/dtc/libfdt
+INCLUDES   += "-I$(LIBFDT_DIR)"
+
+
+LIBFDT_OBJS := fdt.o fdt_ro.o fdt_wip.o fdt_sw.o fdt_rw.o \
+               fdt_strerror.o fdt_empty_tree.o fdt_addresses.o \
+               fdt_overlay.o
+LIBFDT_TARGETS := $(addprefix $(BUILD_DIR)/libfdt/, $(LIBFDT_OBJS))
+
+.PHONY: all \
+		submodules \
+		clean \
+		docs \
+		clean-docs \
+		format \
+		clang-tidy \
+		clang-tidy-fix \
+		clean-subdirs \
+		tools/register_decoder
+
+all: submodules $(TARGET) tools/register_decoder
+
+submodules:
+	@echo "Ensuring git submodules are initialized..."
+	$(VERBOSE_PREFIX)git submodule update --init --recursive
+
 # Convert ELF to raw Binary
 $(TARGET): $(TARGET_ELF)
 	@mkdir -p $(dir $@)
@@ -78,19 +106,23 @@ $(TARGET): $(TARGET_ELF)
 $(BUILD_DIR)/%.o: $(SRC_DIR)/%.c
 	@mkdir -p $(dir $@)
 	@echo "CC  $<"
-	$(VERBOSE_PREFIX)$(CC) $(CFLAGS) -c $< -o $@
+	$(VERBOSE_PREFIX)$(CC) $(CFLAGS) $(INCLUDES) -c $< -o $@
 
 # Compile assembly files
 $(BUILD_DIR)/%.o: $(SRC_DIR)/%.s
 	@mkdir -p $(dir $@)
 	@echo "CC  $<"
-	$(VERBOSE_PREFIX)$(CC) $(ASFLAGS) $< -o $@
+	$(VERBOSE_PREFIX)$(CC) $(ASFLAGS) $(INCLUDES) $< -o $@
 
 # Link the kernel
-$(TARGET_ELF): $(OBJS)
+$(TARGET_ELF): $(OBJS) $(LIBFDT_TARGETS)
 	@mkdir -p $(dir $@)
 	@echo "LD  $@"
-	$(VERBOSE_PREFIX)$(LD) $(LDFLAGS) $(OBJS) -o $@
+	$(VERBOSE_PREFIX)$(LD) $(LDFLAGS) $(OBJS) $(LIBFDT_TARGETS) -o $@
+
+$(BUILD_DIR)/libfdt/%.o: $(LIBFDT_DIR)/%.c
+	@mkdir -p $(dir $@)
+	$(CC) $(CFLAGS) $(INCLUDES) -c $< -o $@
 
 run: $(TARGET)
 	@echo "Running QEMU..."
@@ -103,11 +135,11 @@ format: $(SRCS_C)
 
 clang-tidy: $(SRCS_C)
 	@echo "Running clang-tidy..."
-	$(VERBOSE_PREFIX)clang-tidy $^ -- $(CFLAGS)
+	$(VERBOSE_PREFIX)clang-tidy $^ -- $(CFLAGS) $(INCLUDES)
 
 clang-tidy-fix: $(SRCS_C)
 	@echo "Running clang-tidy..."
-	$(VERBOSE_PREFIX)clang-tidy $^ --fix -- $(CFLAGS)
+	$(VERBOSE_PREFIX)clang-tidy $^ --fix -- $(CFLAGS) $(INCLUDES)
 
 docs:
 	@echo "Generating Doxygen documentation..."

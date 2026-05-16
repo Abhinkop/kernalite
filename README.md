@@ -29,6 +29,19 @@ The project is designed to be built using:
 * **Make:** For low-level control over the build process.
 * **CMake:** (Optional) For modular project management as the codebase grows.
 
+### Git Submodules
+This repository depends on external sources under `external/dtc`, which is tracked as a git submodule.
+When cloning this repository, initialize submodules before building:
+```bash
+git clone --recurse-submodules <repo-url>
+cd kernalite
+make all
+```
+If you already cloned without submodules, run:
+```bash
+git submodule update --init --recursive
+```
+
 ### Emulation
 To test Kernalite on aarch64 using QEMU:
 ```bash
