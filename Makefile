@@ -12,7 +12,7 @@ IMG_NAME ?= Image
 # -Wall -Wextra: Enable all warnings
 # -ffreestanding: No standard library environment
 # -nostdlib: Don't link against system libraries
-CFLAGS  = -c -Wall -Wextra -ffreestanding -nostdlib -nostartfiles -Isrc/include
+CFLAGS  = -c -Wall -Wextra -ffreestanding -nostdlib -Isrc/include -mgeneral-regs-only
 ASFLAGS = -c -x assembler-with-cpp -Isrc/include
 LDFLAGS = -T scripts/linker.ld
 
@@ -37,8 +37,10 @@ TARGET = $(BUILD_DIR)/images/$(IMG_NAME)
 
 # Source files
 SRCS_C  = $(SRC_DIR)/kernel/main.c \
+		  $(SRC_DIR)/kernel/drivers/uart.c \
 		  $(SRC_DIR)/kernel/error/panic.c \
-		  $(SRC_DIR)/kernel/error/error_strings.c
+		  $(SRC_DIR)/kernel/error/error_strings.c \
+		  $(SRC_DIR)/kernel/utils/kprintf.c
 
 SRCS_AS = $(SRC_DIR)/boot/boot.s
 
@@ -58,7 +60,7 @@ ifeq ($(BUILD_TYPE),debug)
   CFLAGS += $(DEBUG_FLAGS)
 else
   CFLAGS += $(RELEASE_FLAGS)
-  POST_BUILD = @echo "STRIP $@"; $(STRIP) --strip-all $< -o $@
+  POST_BUILD = $(VERBOSE_PREFIX)$(STRIP) --strip-all $<
 endif
 
 .PHONY: all clean docs clean-docs format clang-tidy clang-tidy-fix clean-subdirs tools/register_decoder
@@ -66,9 +68,9 @@ all: $(TARGET) tools/register_decoder
 # Convert ELF to raw Binary
 $(TARGET): $(TARGET_ELF)
 	@mkdir -p $(dir $@)
+	$(POST_BUILD)
 	@echo "OBJCOPY $@"
 	$(VERBOSE_PREFIX)$(OBJCOPY) -O binary $< $@
-	$(VERBOSE_PREFIX)$(POST_BUILD)
 
 # Compile C files
 $(BUILD_DIR)/%.o: $(SRC_DIR)/%.c
