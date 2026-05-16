@@ -24,12 +24,9 @@ SECTIONS
         __bss_end = .;
     } :data_perm
     .data.page_tables : {
-        init_idmap_pg_dir = .;
-        /* * Reserve 16KB (4 pages).
-         * This allows for L0, L1, and potentially L2/L3 if needed later.
-         */
-        . += 16384;
-        init_idmap_pg_end = .;
+        page_allocator_bit_map_start = .;
+        . += 0x10000; /* Reserve 64 KiB for the page bitmap (supports up to 2 GiB of RAM at 4 KiB pages) */
+        page_allocator_bit_map_end = .;
     }
     __bss_size = (__bss_end - __bss_start) >> 3;
 
