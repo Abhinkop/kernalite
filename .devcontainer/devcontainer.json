@@ -1,0 +1,28 @@
+// For format details, see https://aka.ms/devcontainer.json. For config options, see the
+// README at: https://github.com/devcontainers/templates/tree/main/src/ubuntu
+{
+	"name": "Ubuntu",
+	"build": {
+		// Path is relative to the devcontainer.json file.
+		"dockerfile": "Dockerfile"
+	},
+	"customizations": {
+		"vscode": {
+			"extensions": [
+				"plorefice.devicetree",
+				"luveti.kconfig",
+				"13xforever.language-x86-64-assembly",
+				"florent-revest.addr2line",
+				"MKornelsen.vscode-arm64",
+				"ms-vscode.cpptools",
+				"llvm-vs-code-extensions.vscode-clangd",
+				"idanp.checkpatch",
+				"florent-revest.git-send-email",
+				"eamodio.gitlens",
+				"ms-vscode.makefile-tools",
+				"shardulm94.trailing-spaces",
+				"xaver.clang-format"
+			]
+		}
+	}
+}
