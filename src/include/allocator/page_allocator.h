@@ -12,6 +12,7 @@
 
 #include <stdint.h>
 #include <stddef.h>
+#include <stdbool.h>
 
 /** * @brief Standard architecture page size (4 KiB).
  */
@@ -27,6 +28,16 @@
  * @return bool True if initialization was successful, false otherwise.
  */
 bool page_init(void *mem_start, size_t mem_size);
+
+/**
+ * @brief Reserves a specific number of contiguous pages.
+ * * Marks the specified range of pages as reserved.
+ *
+ * @param ptr       Pointer to the start of the memory block to reserve.
+ * @param num_pages The number of contiguous pages to reserve.
+ * @return bool True if the pages were successfully reserved, false otherwise.
+ */
+bool reserve_page(void *ptr, size_t num_pages);
 
 /**
  * @brief Allocates a contiguous block of physical pages.

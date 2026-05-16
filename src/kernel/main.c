@@ -14,6 +14,7 @@
 #include "fdt/fdt.h"
 #include "allocator/page_allocator.h"
 
+#include <stdbool.h>
 #include <stdio.h>
 #include <stdint.h>
 
@@ -56,6 +57,29 @@ void print_memory_map(const Memory_map_t *mmap)
 }
 
 /**
+ * @brief Reserve pages occupied by the kernel image.
+ * * This function calculates the number of pages occupied by the kernel
+ * image based on the linker-provided symbols and reserves those pages in
+ * the page allocator to prevent them from being allocated for other purposes.
+ * * @return bool True if reservation was successful, false otherwise.
+ */
+bool reserve_kerenel_img_pages(void)
+{
+	size_t img_size = get_image_size();
+	size_t num_pages = (img_size + PAGE_SIZE - 1) / PAGE_SIZE;
+	void *img_start = (void *)&image_start;
+
+	kprintf("Reserving kernel image pages: start=%p, size=0x%lx bytes, pages=%u\n",
+		img_start, img_size, num_pages);
+
+	if (!reserve_page(img_start, num_pages)) {
+		kprintf("Failed to reserve kernel image pages. Halting.\n");
+		return false;
+	}
+	return true;
+}
+
+/**
  * @brief Kernel Main Entry Point.
  * * Called from primary_entry (boot.s) after the stack has been initialized
  * and the BSS section has been cleared.
@@ -87,8 +111,21 @@ void main(const uint64_t *boot_args_ptr)
 
 	print_memory_map(&mmap);
 
-	// NOLINTNEXTLINE(*-int-to-ptr)
-	page_init((void *)mmap.regions[0].base, mmap.regions[0].size);
+	// NOLINTBEGIN(*-int-to-ptr)
+	bool page_init_result =
+		page_init((void *)mmap.regions[0].base, mmap.regions[0].size);
+	// NOLINTEND(*-int-to-ptr)
+
+	if (!page_init_result) {
+		kprintf("Failed to initialize page allocator. Halting.\n");
+		return;
+	}
+
+	if (!reserve_kerenel_img_pages()) {
+		kprintf("Error while reserving kernel binary pages\n");
+		return;
+	}
+
 	page_dump_status();
 
 	kprintf("Hello World!\n");

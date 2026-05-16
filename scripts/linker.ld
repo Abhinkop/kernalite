@@ -10,7 +10,10 @@ PHDRS
 SECTIONS
 {
     /* QEMU loads the kernel at 0x40000000 for aarch64 virt */
-	. = 0x40000000;
+    . = 0x40000000;
+
+    /* Image start symbol: address of the first byte of the linked image */
+    image_start = .;
 
 	.header . : { KEEP(*(.header.arm64)) } :text_perm
 	.text : { *(.text) } :text_perm
@@ -37,4 +40,10 @@ SECTIONS
     }
 
     _end = .;
+
+    /* Image end symbol: address one past the last byte of the linked image */
+    image_end = .;
+
+    /* Provide an easily-retrievable image size symbol (in bytes). */
+    PROVIDE(image_size = image_end - image_start);
 }

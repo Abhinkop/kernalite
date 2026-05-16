@@ -2,13 +2,14 @@
 
 #include <stdint.h>
 #include <stddef.h>
+#include <stdbool.h>
 
 #include "utils/kprintf.h"
 #include "linker/symblos.h"
 
-static uint8_t *mem_base; /**< Start of the managed memory region */
-static uint8_t *bitmap; /**< Pointer to the bitmap (lives at mem_base) */
-static size_t total_pages; /**< Total number of 4KB pages in the pool */
+static uint8_t *mem_base = NULL; /**< Start of the managed memory region */
+static uint8_t *bitmap = NULL; /**< Pointer to the bitmap (lives at mem_base) */
+static size_t total_pages = 0; /**< Total number of 4KB pages in the pool */
 
 bool page_init(void *mem_start, size_t mem_size)
 {
@@ -69,6 +70,34 @@ bool page_init(void *mem_start, size_t mem_size)
 	}
 
 	kprintf("PAGE: Usable memory starts at 0x%lx\n", (uintptr_t)mem_base);
+	return true;
+}
+
+bool reserve_page(void *ptr, size_t num_pages)
+{
+	if (!ptr || !mem_base || total_pages == 0 || !bitmap) {
+		return false;
+	}
+
+	uintptr_t start_addr = (uintptr_t)ptr;
+	uintptr_t end_addr = start_addr + (num_pages * PAGE_SIZE);
+
+	uintptr_t mem_start = (uintptr_t)mem_base;
+	uintptr_t mem_end = mem_start + (total_pages * PAGE_SIZE);
+
+	if (start_addr < mem_start || end_addr > mem_end) {
+		kprintf("PAGE ERROR: Attempted to reserve out-of-bounds range %p - %p\n",
+			ptr, end_addr);
+		return false;
+	}
+
+	size_t start_index = ((uint8_t *)ptr - mem_base) / PAGE_SIZE;
+	for (size_t i = 0; i < num_pages; i++) {
+		size_t page_index = start_index + i;
+		bitmap[page_index / 8] |= (1 << (page_index % 8));
+	}
+	kprintf("PAGE: Reserved %u pages at %p (index %u)\n", num_pages, ptr,
+		start_index);
 	return true;
 }
 
