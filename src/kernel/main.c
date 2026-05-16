@@ -63,6 +63,8 @@ void main(const uint64_t *boot_args_ptr)
 	}
 	kprintf("Hello World!\n");
 
+	asm volatile(
+		"brk #0"); // Trigger a breakpoint to test exception handling
 	/* System should not return; if it does, boot.s handles it with a halt loop.
    */
 }
