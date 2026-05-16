@@ -97,7 +97,7 @@ run: $(TARGET)
 	$(VERBOSE_PREFIX)qemu-system-aarch64 -machine virt \
 	-cpu cortex-a57 -nographic -kernel $(TARGET)
 
-format: $(SRCS_C) $(SRCS_AS)
+format: $(SRCS_C)
 	@echo "Formatting source files..."
 	$(VERBOSE_PREFIX)clang-format -i $^
 
