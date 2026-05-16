@@ -1,6 +1,12 @@
 /**
  * @file kprintf.c
  * @brief Implementation of formatted print functions for kernel debugging.
+ *
+ * Implements variadic print helpers and serial output wiring for the in-kernel
+ * diagnostic console.
+ *
+ * @author Abhin Parekadan Jose
+ * @date 2026-05-16
  */
 
 #include "utils/kprintf.h"
@@ -77,6 +83,8 @@ int vprintf(const char *format, va_list args)
 		switch (*ptr) {
 		case 'l':
 			ptr++;
+			__attribute__((
+				fallthrough)); /* fallthrough: handle 'lx' (long hex) as 'x' */
 		case 'x':
 		case 'p': {
 			if (*ptr == 'p') {

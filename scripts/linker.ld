@@ -10,7 +10,10 @@ PHDRS
 SECTIONS
 {
     /* QEMU loads the kernel at 0x40000000 for aarch64 virt */
-	. = 0x40000000;
+    . = 0x40000000;
+
+    /* Image start symbol: address of the first byte of the linked image */
+    image_start = .;
 
 	.header . : { KEEP(*(.header.arm64)) } :text_perm
 	.text : { *(.text) } :text_perm
@@ -24,12 +27,9 @@ SECTIONS
         __bss_end = .;
     } :data_perm
     .data.page_tables : {
-        init_idmap_pg_dir = .;
-        /* * Reserve 16KB (4 pages).
-         * This allows for L0, L1, and potentially L2/L3 if needed later.
-         */
-        . += 16384;
-        init_idmap_pg_end = .;
+        page_allocator_bit_map_start = .;
+        . += 0x10000; /* Reserve 64 KiB for the page bitmap (supports up to 2 GiB of RAM at 4 KiB pages) */
+        page_allocator_bit_map_end = .;
     }
     __bss_size = (__bss_end - __bss_start) >> 3;
 
@@ -40,4 +40,10 @@ SECTIONS
     }
 
     _end = .;
+
+    /* Image end symbol: address one past the last byte of the linked image */
+    image_end = .;
+
+    /* Provide an easily-retrievable image size symbol (in bytes). */
+    PROVIDE(image_size = image_end - image_start);
 }

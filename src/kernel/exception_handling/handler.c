@@ -1,6 +1,18 @@
-#include <stdint.h>
+/**
+ * @file handler.c
+ * @brief Exception and interrupt handler utilities used during early boot.
+ *
+ * This file contains a simple generic exception handler used during
+ * early bring-up to report the current exception level and stack pointer
+ * selection, then halt to avoid returning to the faulting context.
+ *
+ * @author Abhin Parekadan Jose
+ * @date 2026-05-16
+ */
 
 #include "utils/kprintf.h"
+
+#include <stdint.h>
 
 void generic_handler(void)
 {

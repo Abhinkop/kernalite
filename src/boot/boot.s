@@ -1,10 +1,12 @@
 /**
  * @file boot.s
  * @brief Low-level AArch64 bootstrapper and kernel entry point.
+ *
+ * Handles the initial CPU state, sets up an emergency stack, clears the BSS
+ * section, and transitions execution to the C kernel.
+ *
  * @author Abhin Parekadan Jose
- * @date 2024-06-01
- * * This file handles the initial CPU state, sets up an emergency stack,
- * clears the BSS section, and transitions execution to the C kernel.
+ * @date 2026-04-11
  */
 
 #include "error/error_codes.h"

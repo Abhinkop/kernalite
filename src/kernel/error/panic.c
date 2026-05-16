@@ -1,11 +1,12 @@
 /**
  * @file panic.c
  * @brief Diagnostic and emergency error handling routines.
+ *
+ * Provides low-level UART output and panic handling routines used when the
+ * kernel encounters unrecoverable failures.
+ *
  * @author Abhin Parekadan Jose
- * @date 2024-06-01
- * * This file provides low-level printing utilities for hexadecimal values
- * and the primary panic handler used when the kernel encounters an
- * unrecoverable state.
+ * @date 2026-04-11
  */
 
 #include "error/error_strings.h"

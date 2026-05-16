@@ -45,4 +45,5 @@ git submodule update --init --recursive
 ### Emulation
 To test Kernalite on aarch64 using QEMU:
 ```bash
-qemu-system-aarch64 -M virt -cpu cortex-a53 -kernel build/kernalite.elf -nographic
+make all
+qemu-system-aarch64 -M virt -cpu cortex-a53 -kernel build/images/Image -nographic

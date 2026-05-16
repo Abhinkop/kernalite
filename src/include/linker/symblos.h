@@ -1,51 +1,45 @@
 /**
  * @file symblos.h
- * @brief Symbol definitions for kernel initialization and memory management.
- * @details This header defines the symbols that are used to interface between
- * the assembly bootstrap code and the C environment of the kernel. It includes
- * the storage for bootloader arguments and references to the memory regions
- * reserved for the initial page tables as defined in the linker script.
- * * @author Abhin Parekadan Jose
+ * @brief Symbol definitions from the linker script.
+ *
+ * Declares the linker-provided symbols used by the kernel to locate the image
+ * bounds, zero page allocator bitmap, and other layout metadata.
+ *
+ * @author Abhin Parekadan Jose
+ * @date 2026-04-12
  */
+#ifndef LINKER_SYMBLOS_H
+#define LINKER_SYMBLOS_H
 
 #include <stdint.h>
+#include <stddef.h>
 
 /**
- * @name Bootloader Arguments
- * @{
+ * @brief Start of the page allocator bitmap.
  */
+extern uint8_t page_allocator_bit_map_start[];
 
 /**
- * @brief Captured bootloader arguments.
- * * Stores the raw values of registers x0 through x3 as passed by the 
- * bootloader (e.g., U-Boot) at the moment of kernel entry.
- * * - boot_args[0]: Physical address of the Device Tree Blob (FDT).
- * - boot_args[1]: Reserved (0).
- * - boot_args[2]: Reserved (0).
- * - boot_args[3]: Reserved (0).
+ * @brief End of the page allocator bitmap.
  */
-uint64_t boot_args[4];
-
-/** @} */
+extern uint8_t page_allocator_bit_map_end[];
 
 /**
- * @name MMU Initialization Symbols
- * @{
+ * @brief Image start and end symbols provided by the linker script.
+ *
+ * These are linker-defined symbols and do not occupy storage; treat them
+ * as pointers whose difference yields the image size.
  */
+extern const char image_start;
+extern const char image_end;
 
-/**
- * @brief Start of the identity map page directory.
- * * This symbol marks the base of the memory region reserved in the
- * linker script for the initial Level 0 translation table.
- * @note This address must be 4KB (granule) aligned.
+/*
+ * Return the size of the linked image in bytes.
+ * Uses the linker-provided `image_start` and `image_end` symbols.
  */
-extern void* init_idmap_pg_dir;
+static inline size_t get_image_size(void)
+{
+	return (size_t)(&image_end - &image_start);
+}
 
-/**
- * @brief End of the identity map page directory region.
- * * Used to calculate the total size of the reserved page table area
- * for initialization (e.g., zeroing memory via memset) and bounds checking.
- */
-extern void* init_idmap_pg_end;
-
-/** @} */
+#endif // LINKER_SYMBLOS_H

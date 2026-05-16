@@ -1,8 +1,12 @@
 /**
  * @file error_strings.h
  * @brief Human-readable string mapping for kernel error codes.
+ *
+ * Provides lookup support for converting numeric error codes into readable
+ * diagnostics used by panic and logging routines.
+ *
  * @author Abhin Parekadan Jose
- * @date 2024-06-01
+ * @date 2026-04-11
  */
 
 #ifndef ERROR_STRINGS_H

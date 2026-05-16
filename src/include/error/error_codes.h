@@ -1,7 +1,12 @@
-/* @file errorcodes.h
+/**
+ * @file error_codes.h
  * @brief Kernel-wide error definitions and diagnostic utilities.
+ *
+ * Defines kernel error codes used throughout the bootloader and runtime
+ * subsystems for consistent failure reporting.
+ *
  * @author Abhin Parekadan Jose
- * @date 2024-06-01
+ * @date 2026-04-11
  */
 
 #ifndef ERROR_CODES_H

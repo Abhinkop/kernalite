@@ -1,3 +1,15 @@
+/**
+ * @file vector.s
+ * @brief Exception vector table and assembly helpers for EL1.
+ *
+ * This file defines the vector table used to handle synchronous and
+ * asynchronous exceptions, along with register save/restore macros and
+ * the `install_vectors` entry to set `VBAR_EL1` during early boot.
+ *
+ * @author Abhin Parekadan Jose
+ * @date 2026-05-16
+ */
+
 .section .text
 
 // ─────────────────────────────────────────────────────────────────────────────
