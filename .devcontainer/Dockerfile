@@ -1,5 +1,8 @@
 FROM mcr.microsoft.com/devcontainers/base:noble
 
+ARG ARM_TOOLCHAIN_VERSION=13.3.rel1
+ARG TOOLCHAIN_DIR=/opt/arm-toolchain
+
 RUN apt-get update && apt-get install -y \
     build-essential \
     clang \
@@ -26,4 +29,12 @@ RUN apt-get update && apt-get install -y \
     libssl-dev \
     pkg-config \
     ca-certificates \
-    && rm -rf /var/lib/apt/lists/*
+    && rm -rf /var/lib/apt/lists/* \
+    && cp /usr/lib/git-core/git-absorb $(git --exec-path)/git-absorb
+
+RUN mkdir -p ${TOOLCHAIN_DIR} && \
+    wget -q https://developer.arm.com/-/media/Files/downloads/gnu/${ARM_TOOLCHAIN_VERSION}/binrel/arm-gnu-toolchain-${ARM_TOOLCHAIN_VERSION}-x86_64-aarch64-none-elf.tar.xz && \
+    tar -xf arm-gnu-toolchain-${ARM_TOOLCHAIN_VERSION}-x86_64-aarch64-none-elf.tar.xz -C ${TOOLCHAIN_DIR} --strip-components=1 && \
+    rm arm-gnu-toolchain-${ARM_TOOLCHAIN_VERSION}-x86_64-aarch64-none-elf.tar.xz
+
+ENV PATH="${TOOLCHAIN_DIR}/bin:${PATH}"
