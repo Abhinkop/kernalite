@@ -1,17 +1,27 @@
 ---
+# Filter to only report issues in your source code
+HeaderFilterRegex: '^(src)/.*'
+
+# Treat kernel-specific logic errors as build-breaking offenses
+WarningsAsErrors: 'linuxkernel-*'
+
+# Combined check list
 Checks: >
   -*,
+  clang-diagnostic-*,
+  clang-analyzer-*,
   linuxkernel-*,
   bugprone-*,
   -bugprone-assignment-in-if-condition,
   readability-*,
   -readability-braces-around-statements,
   -readability-magic-numbers,
+  performance-*,
+  portability-*,
   misc-*,
-  clang-analyzer-*,
-  performance-*
-WarningsAsErrors: 'linuxkernel-*'
-HeaderFilterRegex: '.*'
+  -misc-include-cleaner
+
+# Enforce kernel-style naming conventions
 CheckOptions:
   - key: readability-identifier-naming.VariableCase
     value: lower_case
