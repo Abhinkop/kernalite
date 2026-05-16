@@ -83,6 +83,8 @@ int vprintf(const char *format, va_list args)
 		switch (*ptr) {
 		case 'l':
 			ptr++;
+			__attribute__((
+				fallthrough)); /* fallthrough: handle 'lx' (long hex) as 'x' */
 		case 'x':
 		case 'p': {
 			if (*ptr == 'p') {
