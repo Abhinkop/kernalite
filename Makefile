@@ -43,6 +43,7 @@ SRCS_C  = $(SRC_DIR)/kernel/main.c \
 		  $(SRC_DIR)/kernel/error/panic.c \
 		  $(SRC_DIR)/kernel/error/error_strings.c \
 		  $(SRC_DIR)/kernel/exception_handling/handler.c \
+		  $(SRC_DIR)/kernel/fdt/check.c \
 		  $(SRC_DIR)/kernel/utils/kprintf.c \
 		  $(SRC_DIR)/kernel/utils/string.c
 
