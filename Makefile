@@ -14,6 +14,9 @@ INCLUDES = -Isrc/include
 # -Wall -Wextra: Enable all warnings
 # -ffreestanding: No standard library environment
 # -nostdlib: Don't link against system libraries
+# -mgeneral-regs-only: Restrict to general-purpose registers (AArch64) needed for variadic functions
+#						Without this, the printf implementation in kprintf.c fails.
+# 						Todo: Find root cause of this and remove this flag if possible.
 CFLAGS  = -c -Wall -Wextra -ffreestanding -nostdlib -mgeneral-regs-only
 ASFLAGS = -c -x assembler-with-cpp
 LDFLAGS = -T scripts/linker.ld
