@@ -8,12 +8,14 @@ RUN apt-get update && apt-get install -y \
     clang \
     clang-format \
     clang-tidy \
+    doxygen \
     lld \
     llvm \
     llvm-dev \
     llvm-runtime \
     clangd \
     gcc-aarch64-linux-gnu \
+    graphviz \
     binutils-aarch64-linux-gnu \
     gdb-multiarch \
     qemu-system-arm \
