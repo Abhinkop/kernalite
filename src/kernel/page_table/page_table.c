@@ -21,14 +21,16 @@
 #define IDX_MASK 0x1FFUL
 
 /**
-* @brief Set the next level table address in a page table entry.
-* @param entry Pointer to the page table entry to modify.
-* @param addr Physical address of the next level page table (must be page aligned).
-*/
+ * @brief Set the next level table address in a page table entry.
+ * @param entry Pointer to the page table entry to modify.
+ * @param addr Physical address of the next level page table (must be page
+ * aligned).
+ */
 inline void set_page_table_entry_address(page_table_entry_t *entry,
 					 phy_addr addr)
 {
-	const uint64_t addr_mask = 0xFFFFFFFFF000UL; // Mask for bits [47:12]
+	// Mask for bits [47:12]
+	const uint64_t addr_mask = 0xFFFFFFFFF000UL;
 	entry->nlta_47_12 = (addr & addr_mask) >> PAGE_SHIFT;
 }
 
@@ -39,6 +41,7 @@ inline void set_page_table_entry_address(page_table_entry_t *entry,
  */
 inline phy_addr get_page_table_entry_address(const page_table_entry_t *entry)
 {
+	// Shift to align address to bits [47:12]
 	return ((phy_addr)entry->nlta_47_12 << PAGE_SHIFT);
 }
 
@@ -65,7 +68,8 @@ virt_addr pa_to_va(phy_addr p_addr)
 /**
  * @brief Set the next level table address in a page table entry.
  * @param entry Pointer to the page table entry to modify.
- * @param addr Physical address of the next level page table (must be page aligned).
+ * @param addr Physical address of the next level page table (must be page
+ * aligned).
  */
 void set_next_level_table(page_table_entry_t *entry, phy_addr next_table_addr)
 {
@@ -75,7 +79,8 @@ void set_next_level_table(page_table_entry_t *entry, phy_addr next_table_addr)
 }
 
 /**
- * @brief Allocate a new page table and set it as the next level table in the entry.
+ * @brief Allocate a new page table and set it as the next level table in the
+ * entry.
  * @param entry Pointer to the page table entry to modify.
  * @return true if successful, false otherwise.
  */
@@ -119,12 +124,10 @@ page_table_t *get_next_level_table(page_table_entry_t *entry)
 void dump_memory_map_recursive(page_table_t *root, uint64_t level,
 			       uint64_t v_addr_prefix)
 {
-	const uint8_t level_shift =
-		(9 * (3 - level)) +
-		12; // 9 bits per level, starting from L0 and 12 bits for page offset
-	const uint64_t level_mask =
-		IDX_MASK
-		<< level_shift; // 9 bits mask for the current level index
+	// 9 bits per level, starting from L0 and 12 bits for page offset
+	const uint8_t level_shift = (9 * (3 - level)) + 12;
+	// 9 bits mask for the current level index
+	const uint64_t level_mask = IDX_MASK << level_shift;
 
 	for (uint64_t i = 0; i < 512; i++) {
 		page_table_entry_t entry = root->entries[i];

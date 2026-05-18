@@ -55,6 +55,9 @@ SRCS_C  = $(SRC_DIR)/kernel/allocator/page_allocator.c \
 SRCS_AS = $(SRC_DIR)/boot/boot.s \
 		  $(SRC_DIR)/kernel/exception_handling/vector.s
 
+# only used for formatting and linting
+SRCS_H  = $(shell find $(SRC_DIR) -name '*.h')
+
 OBJS_C  = $(SRCS_C:$(SRC_DIR)/%.c=$(BUILD_DIR)/%.o)
 OBJS_AS = $(SRCS_AS:$(SRC_DIR)/%.s=$(BUILD_DIR)/%.o)
 OBJS    = $(OBJS_C) $(OBJS_AS)
@@ -135,7 +138,7 @@ run: $(TARGET)
 	$(VERBOSE_PREFIX)qemu-system-aarch64 -machine virt \
 	-cpu cortex-a57 -nographic -kernel $(TARGET)
 
-format: $(SRCS_C)
+format: $(SRCS_C) $(SRCS_H)
 	@echo "Formatting source files..."
 	$(VERBOSE_PREFIX)clang-format -i $^
 

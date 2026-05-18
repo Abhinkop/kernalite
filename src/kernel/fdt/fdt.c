@@ -1,6 +1,7 @@
 /**
  * @file fdt.c
- * @brief Implementation of Device Tree Blob (FDT) parsing and validation functions.
+ * @brief Implementation of Device Tree Blob (FDT) parsing and validation
+ * functions.
  *
  * Validates the FDT header, extracts memory map entries, and exposes kernel
  * helpers for consuming device tree data.
@@ -70,8 +71,9 @@ int get_mem(const void *fdt, Memory_map_t *mmap)
 	}
 
 	/* Search for nodes marked with device_type = "memory".
-     * Standard FDT path is /memory, but some systems use /memory@0 or others.
-     */
+	 * Standard FDT path is /memory, but some systems use /memory@0 or
+	 * others.
+	 */
 	while ((node = fdt_node_offset_by_prop_value(fdt, node, "device_type",
 						     "memory", 7)) >= 0) {
 		int len;

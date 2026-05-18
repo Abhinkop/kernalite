@@ -7,14 +7,14 @@
  * @brief Hardware abstraction for a UART device.
  */
 typedef struct uart_device {
-    /** @brief Base address for Memory-Mapped I/O */
-    uintptr_t mmio_base;
+	/** @brief Base address for Memory-Mapped I/O */
+	uintptr_t mmio_base;
 
-    /** @brief Function pointer to transmit a character */
-    void (*putc)(struct uart_device *dev, char c);
+	/** @brief Function pointer to transmit a character */
+	void (*putc)(struct uart_device *dev, char c);
 
-    /** @brief Function pointer to receive a character */
-    char (*getc)(struct uart_device *dev);
+	/** @brief Function pointer to receive a character */
+	char (*getc)(struct uart_device *dev);
 } uart_device_t;
 
 /**

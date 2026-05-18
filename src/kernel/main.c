@@ -24,7 +24,7 @@ static uart_device_t uart0;
 
 /**
  * @brief Captured bootloader arguments.
- * * Stores the raw values of registers x0 through x3 as passed by the 
+ * * Stores the raw values of registers x0 through x3 as passed by the
  * bootloader (e.g., U-Boot) at the moment of kernel entry.
  * * - boot_args[0]: Physical address of the Device Tree Blob (FDT).
  * - boot_args[1]: Reserved (0).
@@ -179,8 +179,10 @@ void main(const uint64_t *boot_args_ptr)
 
 	kprintf("Hello World!\n");
 
-	asm volatile(
-		"brk #0"); // Trigger a breakpoint to test exception handling
-	/* System should not return; if it does, boot.s handles it with a halt loop.
-   */
+	// Trigger a breakpoint to test exception handling
+	asm volatile("brk #0");
+
+	/* System should not return; if it does, boot.s handles it with a halt
+	 * loop.
+	 */
 }

@@ -1,6 +1,7 @@
 /**
  * @file string.h
- * @brief Minimal string and memory manipulation functions for bare-metal AArch64.
+ * @brief Minimal string and memory manipulation functions for bare-metal
+ * AArch64.
  *
  * Provides essential string and memory helpers used by the kernel and linked
  * external libraries in a freestanding runtime environment.
@@ -41,7 +42,8 @@ int memcmp(const void *str1, const void *str2, size_t size);
  * * @param str Pointer to the memory area.
  * @param chr The character to search for (interpreted as an unsigned char).
  * @param size The number of bytes to analyze.
- * @return  A pointer to the matching byte, or NULL if the character is not found.
+ * @return  A pointer to the matching byte, or NULL if the character is not
+ * found.
  */
 void *memchr(const void *str, int chr, size_t size);
 
@@ -58,8 +60,8 @@ void *memchr(const void *str, int chr, size_t size);
 void *memmove(void *dest, const void *src, size_t size);
 
 /**
- * @brief Fills the first @p size bytes of the memory area pointed to by @p s_ptr
- * with the constant byte @p val.
+ * @brief Fills the first @p size bytes of the memory area pointed to by @p
+ * s_ptr with the constant byte @p val.
  * * @param s_ptr Pointer to the memory area to fill.
  * @param val The byte value to set.
  * @param size Number of bytes to be set to the value.
@@ -80,7 +82,8 @@ char *strchr(const char *str, int chr);
  * * Scans the string @p str to find the last occurrence of character @p chr.
  * * @param str Pointer to the null-terminated string.
  * @param chr The character to search for.
- * @return  A pointer to the last occurrence of the character, or NULL if not found.
+ * @return  A pointer to the last occurrence of the character, or NULL if not
+ * found.
  */
 char *strrchr(const char *str, int chr);
 
@@ -109,7 +112,7 @@ size_t strnlen(const char *str, size_t maxlen);
  * @param base The radix to use (e.g., 10 for decimal, 16 for hex).
  * @return The converted value.
  */
- //NOLINTNEXTLINE(readability-redundant-declaration)
+// NOLINTNEXTLINE(readability-redundant-declaration)
 unsigned long strtoul(const char *nptr, char **endptr, int base);
 
 #endif // UTILS_STRING_H
