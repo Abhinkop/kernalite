@@ -28,6 +28,26 @@
 #define PTRS_PER_TABLE 512
 
 /**
+ * @brief Base virtual address for the kernel.
+ * @note The actual base is 0xFFFF000000000000UL,
+ *       but we use 0 untill we map kernel to high memory.
+ */
+#define KERNEL_BASE_VA 0x0
+
+/** @brief Type for representing physical addresses. */
+typedef uint64_t phy_addr;
+
+/** @brief Type for representing virtual addresses. */
+typedef uint64_t virt_addr;
+
+/** @brief Type for representing page permissions. */
+typedef struct page_permissions {
+	bool read : 1;
+	bool write : 1;
+	bool execute : 1;
+} page_permissions_t;
+
+/**
  * @brief AArch64 VMSAv8-64 Stage 1 Table Descriptor.
  *
  * Represents a page table entry at lookup levels 0, 1, or 2 that points
@@ -214,5 +234,28 @@ typedef enum aptable_values {
 typedef struct {
 	page_table_entry_t entries[PTRS_PER_TABLE];
 } page_table_t;
+
+/**
+ * @brief Initialize a page table.
+ * @param table Pointer to the page table to initialize.
+ */
+void page_table_init(page_table_t *table);
+
+/**
+ * @brief Map a virtual address to a physical address in the page table.
+ * @param root Pointer to the root page table.
+ * @param v_addr The virtual address to map.
+ * @param phy_addr The physical address to map to.
+ * @param perms The permissions for the page table entry.
+ * @return true on success, false on failure (e.g., if allocation fails).
+ */
+bool map_page(page_table_t *root, virt_addr v_addr, phy_addr phy_addr,
+	      page_permissions_t perms);
+
+/**
+ * @brief Dump the memory map for debugging.
+ * @param root Pointer to the root page table to dump.
+ */
+void dump_memory_map(page_table_t *root);
 
 #endif /* PAGE_TABLE_PAGE_TABLE_H */

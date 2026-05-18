@@ -14,6 +14,7 @@
 #include "utils/kprintf.h"
 #include "fdt/fdt.h"
 #include "allocator/page_allocator.h"
+#include "page_table/page_table.h"
 
 #include <stdbool.h>
 #include <stdio.h>
@@ -81,6 +82,50 @@ bool reserve_kerenel_img_pages(void)
 }
 
 /**
+ * @brief Setup dummy page table mappings for testing.
+ * @param root Pointer to the root page table.
+ */
+void setup_dummy_mappings(page_table_t *root)
+{
+	page_table_init(root);
+
+	// Group 1: Share L0, L1, L2 — only L3 entries differ
+	// VA bits [47:39]=0, [38:30]=0, [29:21]=0, [20:12]=1,2,3,4
+	map_page(root, 0xFFFFF00000001000, 0x1000,
+		 (page_permissions_t){ .read = 1, .write = 0, .execute = 0 });
+	map_page(root, 0xFFFFF00000002000, 0x2000,
+		 (page_permissions_t){ .read = 1, .write = 1, .execute = 0 });
+	map_page(root, 0xFFFFF00000003000, 0x3000,
+		 (page_permissions_t){ .read = 1, .write = 0, .execute = 1 });
+	map_page(root, 0xFFFFF00000004000, 0x4000,
+		 (page_permissions_t){ .read = 1, .write = 1, .execute = 1 });
+
+	// Group 2: Different L1 region — forces new L2 table allocation
+	// VA bits [47:39]=0, [38:30]=1,2,3,4, [29:21]=0, [20:12]=0
+	map_page(root, 0xFFFFF00040000000, 0x5000,
+		 (page_permissions_t){ .read = 0, .write = 0, .execute = 1 });
+	map_page(root, 0xFFFFF00080000000, 0x6000,
+		 (page_permissions_t){ .read = 1, .write = 0, .execute = 0 });
+	map_page(root, 0xFFFFF000C0000000, 0x7000,
+		 (page_permissions_t){ .read = 0, .write = 1, .execute = 0 });
+	map_page(root, 0xFFFFF00100000000, 0x8000,
+		 (page_permissions_t){ .read = 1, .write = 1, .execute = 0 });
+
+	// Group 3: Different L0 region — forces new L1 table allocation
+	// VA bits [47:39]=1,2,3,4, [38:30]=0, [29:21]=0, [20:12]=0
+	map_page(root, 0xFFFFF08000000000, 0x9000,
+		 (page_permissions_t){ .read = 0, .write = 0, .execute = 1 });
+	map_page(root, 0xFFFFF10000000000, 0xA000,
+		 (page_permissions_t){ .read = 1, .write = 0, .execute = 1 });
+	map_page(root, 0xFFFFF18000000000, 0xB000,
+		 (page_permissions_t){ .read = 0, .write = 1, .execute = 1 });
+	map_page(root, 0xFFFFF20000000000, 0xC000,
+		 (page_permissions_t){ .read = 1, .write = 1, .execute = 1 });
+
+	dump_memory_map(root);
+}
+
+/**
  * @brief Kernel Main Entry Point.
  * * Called from primary_entry (boot.s) after the stack has been initialized
  * and the BSS section has been cleared.
@@ -128,6 +173,9 @@ void main(const uint64_t *boot_args_ptr)
 	}
 
 	page_dump_status();
+
+	page_table_t *root_table = (page_table_t *)page_alloc(1);
+	setup_dummy_mappings(root_table);
 
 	kprintf("Hello World!\n");
 

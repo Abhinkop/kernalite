@@ -13,6 +13,7 @@ Checks: >
   linuxkernel-*,
   bugprone-*,
   -bugprone-assignment-in-if-condition,
+  -bugprone-easily-swappable-parameters,
   readability-*,
   -readability-braces-around-statements,
   -readability-magic-numbers,
