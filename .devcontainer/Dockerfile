@@ -4,6 +4,7 @@ ARG ARM_TOOLCHAIN_VERSION=13.3.rel1
 ARG TOOLCHAIN_DIR=/opt/arm-toolchain
 
 RUN apt-get update && apt-get install -y \
+    bash-completion \
     build-essential \
     clang \
     clang-format \
