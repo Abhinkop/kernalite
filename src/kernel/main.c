@@ -96,56 +96,15 @@ bool reserve_kerenel_img_pages(void)
 }
 
 /**
- * @brief Setup dummy page table mappings for testing.
- * @param root Pointer to the root page table.
- */
-void setup_dummy_mappings(page_table_t *root)
-{
-	page_table_init(root);
-
-	// Group 1: Share L0, L1, L2 — only L3 entries differ
-	// VA bits [47:39]=0, [38:30]=0, [29:21]=0, [20:12]=1,2,3,4
-	map_page(root, 0xFFFFF00000001000, 0x1000,
-		 (page_permissions_t){ .read = 1, .write = 0, .execute = 0 });
-	map_page(root, 0xFFFFF00000002000, 0x2000,
-		 (page_permissions_t){ .read = 1, .write = 1, .execute = 0 });
-	map_page(root, 0xFFFFF00000003000, 0x3000,
-		 (page_permissions_t){ .read = 1, .write = 0, .execute = 1 });
-	map_page(root, 0xFFFFF00000004000, 0x4000,
-		 (page_permissions_t){ .read = 1, .write = 1, .execute = 1 });
-
-	// Group 2: Different L1 region — forces new L2 table allocation
-	// VA bits [47:39]=0, [38:30]=1,2,3,4, [29:21]=0, [20:12]=0
-	map_page(root, 0xFFFFF00040000000, 0x5000,
-		 (page_permissions_t){ .read = 0, .write = 0, .execute = 1 });
-	map_page(root, 0xFFFFF00080000000, 0x6000,
-		 (page_permissions_t){ .read = 1, .write = 0, .execute = 0 });
-	map_page(root, 0xFFFFF000C0000000, 0x7000,
-		 (page_permissions_t){ .read = 0, .write = 1, .execute = 0 });
-	map_page(root, 0xFFFFF00100000000, 0x8000,
-		 (page_permissions_t){ .read = 1, .write = 1, .execute = 0 });
-
-	// Group 3: Different L0 region — forces new L1 table allocation
-	// VA bits [47:39]=1,2,3,4, [38:30]=0, [29:21]=0, [20:12]=0
-	map_page(root, 0xFFFFF08000000000, 0x9000,
-		 (page_permissions_t){ .read = 0, .write = 0, .execute = 1 });
-	map_page(root, 0xFFFFF10000000000, 0xA000,
-		 (page_permissions_t){ .read = 1, .write = 0, .execute = 1 });
-	map_page(root, 0xFFFFF18000000000, 0xB000,
-		 (page_permissions_t){ .read = 0, .write = 1, .execute = 1 });
-	map_page(root, 0xFFFFF20000000000, 0xC000,
-		 (page_permissions_t){ .read = 1, .write = 1, .execute = 1 });
-
-	dump_memory_map(root);
-}
-
-/**
  * @brief Kernel Main Entry Point.
  * * Called from primary_entry (boot.s) after the stack has been initialized
  * and the BSS section has been cleared.
- * * @note This function should never return.
+ * @note This function should never return.
+ * @param boot_args_ptr Pointer to an array containing the bootloader arguments
+ * passed in registers x0-x3.
+ * @return exit code
  */
-void main(const uint64_t *boot_args_ptr)
+int main(const uint64_t *boot_args_ptr)
 {
 	pl011_init(&uart0, 0x09000000);
 	set_kprintf_console((serial_t){ .putc = uart0_putchar, .getc = NULL });
@@ -154,19 +113,19 @@ void main(const uint64_t *boot_args_ptr)
 	const void *fdt_addr = (const void *)boot_args_ptr[0];
 	if (!check_fdt(fdt_addr)) {
 		kprintf("FDT validation failed. Halting.\n");
-		return;
+		return 1;
 	}
 
 	Memory_map_t mmap;
 	// NOLINTNEXTLINE(*-int-to-ptr)
 	if (get_mem(fdt_addr, &mmap) < 0) {
 		kprintf("Failed to parse memory map from FDT. Halting.\n");
-		return;
+		return 1;
 	}
 
 	if (mmap.count != 1) {
 		kprintf("Current implementation only supports a single memory region. Halting.\n");
-		return;
+		return 1;
 	}
 
 	print_memory_map(&mmap);
@@ -178,12 +137,12 @@ void main(const uint64_t *boot_args_ptr)
 
 	if (!page_init_result) {
 		kprintf("Failed to initialize page allocator. Halting.\n");
-		return;
+		return 1;
 	}
 
 	if (!reserve_kerenel_img_pages()) {
 		kprintf("Error while reserving kernel binary pages\n");
-		return;
+		return 1;
 	}
 
 #ifdef RUN_TESTS
@@ -192,15 +151,7 @@ void main(const uint64_t *boot_args_ptr)
 
 	page_dump_status();
 
-	page_table_t *root_table = (page_table_t *)page_alloc(1);
-	setup_dummy_mappings(root_table);
-
 	kprintf("Hello World!\n");
 
-	// Trigger a breakpoint to test exception handling
-	asm volatile("brk #0");
-
-	/* System should not return; if it does, boot.s handles it with a halt
-	 * loop.
-	 */
+	return 0; // returns calls exit with code 0.
 }

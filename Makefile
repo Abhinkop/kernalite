@@ -42,6 +42,7 @@ TARGET = $(BUILD_DIR)/images/$(IMG_NAME)
 
 # Source files
 SRCS_C  = $(SRC_DIR)/kernel/allocator/page_allocator.c \
+		  $(SRC_DIR)/kernel/exit/exit.c \
 		  $(SRC_DIR)/kernel/main.c \
 		  $(SRC_DIR)/kernel/drivers/uart.c \
 		  $(SRC_DIR)/kernel/error/panic.c \
@@ -143,7 +144,8 @@ $(BUILD_DIR)/libfdt/%.o: $(LIBFDT_DIR)/%.c
 run: $(TARGET)
 	@echo "Running QEMU..."
 	$(VERBOSE_PREFIX)qemu-system-aarch64 -machine virt \
-	-cpu cortex-a57 -nographic -kernel $(TARGET)
+	-cpu cortex-a57 -nographic -kernel $(TARGET) -no-reboot \
+	-semihosting
 
 format: $(SRCS_C) $(SRCS_H)
 	@echo "Formatting source files..."
