@@ -141,6 +141,7 @@ run: $(TARGET)
 format: $(SRCS_C) $(SRCS_H)
 	@echo "Formatting source files..."
 	$(VERBOSE_PREFIX)clang-format -i $^
+	$(VERBOSE_PREFIX)$(MAKE) -C tools/register_decoder  BUILD_DIR=../../$(BUILD_DIR) format
 
 clang-tidy: $(SRCS_C)
 	@echo "Running clang-tidy..."

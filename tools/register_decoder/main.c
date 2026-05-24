@@ -1,7 +1,7 @@
 /**
  * @file main.c
  * @brief Entry point for the ARM System Register Decoder tool.
- * @details Provides a CLI and interactive interface to decode various ARM 
+ * @details Provides a CLI and interactive interface to decode various ARM
  * system registers using pre-defined bitfield structures.
  * * @author Abhin Parekadan Jose
  * @date 2026-04-12
@@ -21,10 +21,11 @@
  * @brief Map register string names to their respective decoder functions.
  */
 typedef struct {
-	const char *
-		name; /**< Human-readable register name (e.g., "SCTLR_EL1_64") */
-	void (*decode)(
-		uint64_t); /**< Function pointer to the specific decoder implementation */
+	/** @brief Human-readable register name (e.g., "SCTLR_EL1_64") */
+	const char *name;
+
+	/** @brief Function pointer to the specific decoder implementation */
+	void (*decode)(uint64_t);
 } reg_entry_t;
 
 /**
@@ -70,7 +71,7 @@ int decode_by_name(const char *name, uint64_t val)
 
 /**
  * @brief Main execution logic.
- * @details Handles command-line arguments if provided (argc >= 3), otherwise 
+ * @details Handles command-line arguments if provided (argc >= 3), otherwise
  * falls back to an interactive user prompt.
  * * @param argc Argument count.
  * @param argv Argument vector.

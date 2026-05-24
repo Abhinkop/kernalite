@@ -42,8 +42,13 @@ typedef uint64_t virt_addr;
 
 /** @brief Type for representing page permissions. */
 typedef struct page_permissions {
+	/** @brief Read permission. */
 	bool read : 1;
+
+	/** @brief Write permission. */
 	bool write : 1;
+
+	/** @brief Execute permission. */
 	bool execute : 1;
 } page_permissions_t;
 
@@ -61,7 +66,10 @@ typedef struct page_permissions {
  */
 typedef struct {
 	union {
-		uint64_t value; /**< Raw 64-bit value of the descriptor. */
+		/** @brief Raw 64-bit value of the descriptor. */
+		uint64_t value;
+
+		/** @brief Bit-level representation. */
 		struct {
 			/**
 			 * @brief [0] Valid descriptor flag.
@@ -249,6 +257,7 @@ typedef enum aptable_values {
  * @brief Represents a single page table level (512 entries).
  */
 typedef struct {
+	/** @brief Array of page table entries. */
 	page_table_entry_t entries[PTRS_PER_TABLE];
 } page_table_t;
 
