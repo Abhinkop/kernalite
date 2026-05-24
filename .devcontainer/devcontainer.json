@@ -24,5 +24,8 @@
 				"xaver.clang-format"
 			]
 		}
-	}
+	},
+	"mounts": [
+		"source=kernelite-bashhistory,target=/commandhistory,type=volume"
+	]
 }
