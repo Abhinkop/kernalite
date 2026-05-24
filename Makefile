@@ -77,6 +77,13 @@ else
   POST_BUILD = $(VERBOSE_PREFIX)$(STRIP) --strip-all $<
 endif
 
+ifeq ($(TEST),1)
+  CFLAGS += -DRUN_TESTS
+  TEST_SRCS = $(shell find tests/ -name '*.c')
+  TEST_OBJS = $(TEST_SRCS:tests/%.c=$(BUILD_DIR)/tests/%.o)
+  OBJS += $(TEST_OBJS)
+endif
+
 # --- libfdt ---
 LIBFDT_DIR = ./external/dtc/libfdt
 INCLUDES   += "-I$(LIBFDT_DIR)"
@@ -143,13 +150,13 @@ format: $(SRCS_C) $(SRCS_H)
 	$(VERBOSE_PREFIX)clang-format -i $^
 	$(VERBOSE_PREFIX)$(MAKE) -C tools/register_decoder  BUILD_DIR=../../$(BUILD_DIR) format
 
-clang-tidy: $(SRCS_C)
+clang-tidy: $(SRCS_C) $(TEST_SRCS)
 	@echo "Running clang-tidy..."
-	$(VERBOSE_PREFIX)clang-tidy $^ -- $(CFLAGS) $(INCLUDES)
+	$(VERBOSE_PREFIX)clang-tidy $^ -- $(CFLAGS) $(INCLUDES) --target=aarch64-linux-gnu
 
-clang-tidy-fix: $(SRCS_C)
+clang-tidy-fix: $(SRCS_C) $(TEST_SRCS)
 	@echo "Running clang-tidy..."
-	$(VERBOSE_PREFIX)clang-tidy $^ --fix -- $(CFLAGS) $(INCLUDES)
+	$(VERBOSE_PREFIX)clang-tidy $^ --fix -- $(CFLAGS) $(INCLUDES) --target=aarch64-linux-gnu
 
 docs:
 	@echo "Generating Doxygen documentation..."
@@ -163,6 +170,28 @@ clean-docs:
 
 tools/register_decoder:
 	$(VERBOSE_PREFIX)$(MAKE) -C $@  BUILD_DIR=../../$(BUILD_DIR)
+
+$(BUILD_DIR)/tests/%.o: tests/%.c
+	@mkdir -p $(dir $@)
+	@echo "CC  $<"
+	$(VERBOSE_PREFIX)$(CC) $(CFLAGS) $(INCLUDES) -c $< -o $@
+
+test-qemu: $(TARGET)
+	@echo "Running QEMU integration tests..."
+	$(VERBOSE_PREFIX)qemu-system-aarch64 \
+	-machine virt \
+	-cpu cortex-a57 \
+	-nographic \
+	-kernel $(TARGET) \
+	-no-reboot \
+	-semihosting \
+	; EXIT=$$?; \
+	if [ $$EXIT -eq 0 ]; then \
+		echo "Internal tests PASSED"; \
+	else \
+		echo "Internal tests FAILED"; \
+		exit $$EXIT; \
+	fi
 
 clean: clean-docs
 	@echo "Cleaning build directory..."

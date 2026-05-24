@@ -20,6 +20,20 @@
 #include <stdio.h>
 #include <stdint.h>
 
+#ifdef RUN_TESTS
+
+/**
+ * @brief Run internal kernel tests.
+ * * This function is called when the RUN_TESTS flag is set during compilation.
+ * * It executes a suite of internal tests to validate kernel functionality
+ * before proceeding with normal operation. The results of the tests are
+ * printed to the console, and the system exits with an appropriate code based
+ * on the test outcomes.
+ */
+extern void run_internal_tests(void);
+
+#endif /* RUN_TESTS */
+
 static uart_device_t uart0;
 
 /**
@@ -171,6 +185,10 @@ void main(const uint64_t *boot_args_ptr)
 		kprintf("Error while reserving kernel binary pages\n");
 		return;
 	}
+
+#ifdef RUN_TESTS
+	run_internal_tests();
+#endif
 
 	page_dump_status();
 
