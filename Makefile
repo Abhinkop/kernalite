@@ -105,7 +105,7 @@ LIBFDT_TARGETS := $(addprefix $(BUILD_DIR)/libfdt/, $(LIBFDT_OBJS))
 		clean-subdirs \
 		tools/register_decoder
 
-all: submodules $(TARGET) tools/register_decoder
+all: $(TARGET) tools/register_decoder
 
 submodules:
 	@echo "Ensuring git submodules are initialized..."
