@@ -54,7 +54,8 @@ static void itoa(unsigned long num, int base, char *buf)
  * configured serial console.
  * * Supports: %%c, %%s, %%d, %%u, %%x, %%p.
  * * @param format Formatting string containing plain text and specifiers.
- * @param args   An initialized va_list containing the arguments to be formatted.
+ * @param args   An initialized va_list containing the arguments to be
+ * formatted.
  * @return       The total number of characters successfully printed.
  */
 // NOLINTNEXTLINE(*-cognitive-complexity)
@@ -83,8 +84,8 @@ int vprintf(const char *format, va_list args)
 		switch (*ptr) {
 		case 'l':
 			ptr++;
-			__attribute__((
-				fallthrough)); /* fallthrough: handle 'lx' (long hex) as 'x' */
+			/* fallthrough: handle 'lx' (long hex) as 'x' */
+			__attribute__((fallthrough));
 		case 'x':
 		case 'p': {
 			if (*ptr == 'p') {

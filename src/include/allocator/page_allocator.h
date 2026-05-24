@@ -12,13 +12,11 @@
 #ifndef ALLOCATOR_PAGE_ALLOCATOR_H
 #define ALLOCATOR_PAGE_ALLOCATOR_H
 
+#include "page_table/page_table.h"
+
 #include <stdint.h>
 #include <stddef.h>
 #include <stdbool.h>
-
-/** * @brief Standard architecture page size (4 KiB).
- */
-#define PAGE_SIZE 4096
 
 /**
  * @brief Initializes the page allocator with a specific region of memory.

@@ -21,9 +21,9 @@
  * To add a new error message, define the constant in error_codes.h
  * and add a corresponding entry here.
  */
-#define STRING_MAP                                                             \
-  X(ERROR_CODE_SUCCESS, "SUCCESS")                                             \
-  X(ERROR_CODE_NOT_EL1, "CPU not in EL1")
+#define STRING_MAP                       \
+	X(ERROR_CODE_SUCCESS, "SUCCESS") \
+	X(ERROR_CODE_NOT_EL1, "CPU not in EL1")
 
 /**
  * @brief Converts a numeric error code into a human-readable string.

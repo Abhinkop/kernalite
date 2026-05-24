@@ -20,9 +20,14 @@
 #include "utils/kprintf.h"
 #include "linker/symblos.h"
 
-static uint8_t *mem_base = NULL; /**< Start of the managed memory region */
-static uint8_t *bitmap = NULL; /**< Pointer to the bitmap (lives at mem_base) */
-static size_t total_pages = 0; /**< Total number of 4KB pages in the pool */
+/** @brief Start of the managed memory region */
+static uint8_t *mem_base = NULL;
+
+/** @brief Pointer to the bitmap (lives at mem_base) */
+static uint8_t *bitmap = NULL;
+
+/** @brief Total number of 4KB pages in the pool */
+static size_t total_pages = 0;
 
 bool page_init(void *mem_start, size_t mem_size)
 {

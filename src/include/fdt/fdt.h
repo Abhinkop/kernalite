@@ -2,8 +2,8 @@
  * @file fdt.h
  * @brief Header that interfaces with libfdt for Device Tree Blob (DTB) parsing.
  *
- * Declares the kernel-facing FDT helper APIs used to validate and extract memory
- * mapping information from the device tree.
+ * Declares the kernel-facing FDT helper APIs used to validate and extract
+ * memory mapping information from the device tree.
  *
  * @author Abhin Parekadan Jose
  * @date 2026-05-16
@@ -22,16 +22,22 @@
  * @brief Represents a single physical memory span.
  */
 typedef struct {
-    uint64_t base; /**< Start physical address of the region. */
-    uint64_t size; /**< Size of the region in bytes. */
+	/** @brief Start physical address of the region. */
+	uint64_t base;
+
+	/** @brief Size of the region in bytes. */
+	uint64_t size;
 } Memory_region_t;
 
 /**
  * @brief Container for the system physical memory layout.
  */
 typedef struct {
-    Memory_region_t regions[MAX_MEM_REGIONS]; /**< Array of discovered regions. */
-    int count; /**< Actual number of regions populated. */
+	/** @brief Array of discovered regions. */
+	Memory_region_t regions[MAX_MEM_REGIONS];
+
+	/** @brief Actual number of regions populated. */
+	int count;
 } Memory_map_t;
 
 /**

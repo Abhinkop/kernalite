@@ -14,50 +14,123 @@
 
 /**
  * @union sctlr_el1_32_t
- * @brief Representation of the System Control Register for Exception Level 1 (32-bit).
- * * This union allows accessing the SCTLR_EL1 register as a collective 32-bit value
- * or as individual bit-fields according to the ARMv8-A architecture reference manual.
+ * @brief Representation of the System Control Register for Exception Level 1
+ * (32-bit).
+ * * This union allows accessing the SCTLR_EL1 register as a collective 32-bit
+ * value or as individual bit-fields according to the ARMv8-A architecture
+ * reference manual.
  */
 typedef union {
+	/** @brief Bit-field representation */
 	struct {
-		uint32_t M : 1; /**< [0] MMU enable for EL1 and EL0 */
-		uint32_t A : 1; /**< [1] Alignment check enable */
-		uint32_t C : 1; /**< [2] Data cache enable */
-		uint32_t nTLSMD : 1; /**< [3] No Trap Load Multiple and Store Multiple to Device */
-		uint32_t LSMAOE : 1; /**< [4] Load Multiple and Store Multiple Atomicity and Ordering Enable */
-		uint32_t CP15BEN : 1; /**< [5] CP15 barrier enable (AArch32 legacy) */
-		uint32_t UNK : 1; /**< [6] Writes to this bit are IGNORED. Reads return an UNKNOWN value. */
-		uint32_t ITD : 1; /**< [7] IT Disable (AArch32 legacy) */
-		uint32_t SED : 1; /**< [8] SETEND Disable (AArch32 legacy) */
-		uint32_t RES0_9 : 1; /**< [9] Reserved (RES0) */
-		uint32_t EnRCTX : 1; /**< [10] Disable EL0 access to Predictor flushes */
-		uint32_t RES1_11 : 1; /**< [11] Reserved (RES1) */
-		uint32_t I : 1; /**< [12] Instruction cache enable */
-		uint32_t V : 1; /**< [13] Normal vs High exep vecs */
-		uint32_t RES0_14 : 1; /**< [14] Reserved (RES0) */
-		uint32_t RES0_15 : 1; /**< [15] Reserved (RES0) */
-		uint32_t nTWI : 1; /**< [16] Not trap WFI (Wait For Interrupt) */
-		uint32_t RES0_17 : 1; /**< [17] Reserved (RES0) */
-		uint32_t nTWE : 1; /**< [18] Not trap WFE (Wait For Event) */
-		uint32_t WXN : 1; /**< [19] Write permission implies XN (Execute Never) */
-		uint32_t UWXN : 1; /**< [20] Unprivileged write permission implies PL1 XN (Execute-never) */
-		uint32_t RES0_21 : 1; /**< [21] Reserved (RES0) */
-		uint32_t RES0_22 : 1; /**< [22] Reserved (RES1) */
-		uint32_t SPAN : 1; /**< [23] Set Privileged Access Never */
-		uint32_t RES0_24 : 1; /**< [24] Reserved (RES0) */
-		uint32_t EE : 1; /**< [25] Endianness of data access at EL1 (0:LE, 1:BE) */
-		uint32_t RES0_26 : 1; /**< [26] Reserved (RES0) */
-		uint32_t RES0_27 : 1; /**< [27] Reserved (RES0) */
-		uint32_t TRE : 1; /**< [28] TEX remap enable. */
-		uint32_t AFE : 1; /**< [29] Access Flag Enable. */
-		uint32_t TE : 1; /**< [30] T32 Exception Enable. */
-		uint32_t DSSBS : 1; /**< [31] Default Speculative Store Bypass Safe */
-	} bits; /**< Bit-field representation */
-	uint32_t raw; /**< Raw 64-bit register value */
+		/** @brief [0] MMU enable for EL1 and EL0 */
+		uint32_t M : 1;
+
+		/** @brief [1] Alignment check enable */
+		uint32_t A : 1;
+
+		/** @brief [2] Data cache enable */
+		uint32_t C : 1;
+
+		/** @brief [3] No Trap Load Multiple and Store Multiple to
+		 * Device */
+		uint32_t nTLSMD : 1;
+
+		/** @brief [4] Load Multiple and Store Multiple Atomicity and
+		 * Ordering Enable */
+		uint32_t LSMAOE : 1;
+
+		/** @brief [5] CP15 barrier enable (AArch32 legacy) */
+		uint32_t CP15BEN : 1;
+
+		/** @brief [6] Writes to this bit are IGNORED. Reads return an
+		 * UNKNOWN value. */
+		uint32_t UNK : 1;
+
+		/** @brief [7] IT Disable (AArch32 legacy) */
+		uint32_t ITD : 1;
+
+		/** @brief [8] SETEND Disable (AArch32 legacy) */
+		uint32_t SED : 1;
+
+		/** @brief [9] Reserved (RES0) */
+		uint32_t RES0_9 : 1;
+
+		/** @brief [10] Disable EL0 access to Predictor flushes */
+		uint32_t EnRCTX : 1;
+
+		/** @brief [11] Reserved (RES1) */
+		uint32_t RES1_11 : 1;
+
+		/** @brief [12] Instruction cache enable */
+		uint32_t I : 1;
+
+		/** @brief [13] Normal vs High exep vecs */
+		uint32_t V : 1;
+
+		/** @brief [14] Reserved (RES0) */
+		uint32_t RES0_14 : 1;
+
+		/** @brief [15] Reserved (RES0) */
+		uint32_t RES0_15 : 1;
+
+		/** @brief [16] Not trap WFI (Wait For Interrupt) */
+		uint32_t nTWI : 1;
+
+		/** @brief [17] Reserved (RES0) */
+		uint32_t RES0_17 : 1;
+
+		/** @brief [18] Not trap WFE (Wait For Event) */
+		uint32_t nTWE : 1;
+
+		/** @brief [19] Write permission implies XN (Execute Never) */
+		uint32_t WXN : 1;
+
+		/** @brief [20] Unprivileged write permission implies PL1 XN
+		 * (Execute-never) */
+		uint32_t UWXN : 1;
+
+		/** @brief [21] Reserved (RES0) */
+		uint32_t RES0_21 : 1;
+
+		/** @brief [22] Reserved (RES1) */
+		uint32_t RES0_22 : 1;
+
+		/** @brief [23] Set Privileged Access Never */
+		uint32_t SPAN : 1;
+
+		/** @brief [24] Reserved (RES0) */
+		uint32_t RES0_24 : 1;
+
+		/** @brief [25] Endianness of data access at EL1 (0:LE, 1:BE) */
+		uint32_t EE : 1;
+
+		/** @brief [26] Reserved (RES0) */
+		uint32_t RES0_26 : 1;
+
+		/** @brief [27] Reserved (RES0) */
+		uint32_t RES0_27 : 1;
+
+		/** @brief [28] TEX remap enable. */
+		uint32_t TRE : 1;
+
+		/** @brief [29] Access Flag Enable. */
+		uint32_t AFE : 1;
+
+		/** @brief [30] T32 Exception Enable. */
+		uint32_t TE : 1;
+
+		/** @brief [31] Default Speculative Store Bypass Safe */
+		uint32_t DSSBS : 1;
+	} bits;
+
+	/** @brief Raw 64-bit register value */
+	uint32_t raw;
 } sctlr_el1_32_t;
 
 /**
- * @brief Decodes and prints the status of ALL bitfields in the 32-bit SCTLR_EL1 mapping.
+ * @brief Decodes and prints the status of ALL bitfields in the 32-bit SCTLR_EL1
+ * mapping.
  * @param val The 32-bit raw value of the SCTLR_EL1 register to decode.
  */
 static inline void decode_sctlr_el1_32(uint64_t val)

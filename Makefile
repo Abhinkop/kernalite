@@ -14,6 +14,9 @@ INCLUDES = -Isrc/include
 # -Wall -Wextra: Enable all warnings
 # -ffreestanding: No standard library environment
 # -nostdlib: Don't link against system libraries
+# -mgeneral-regs-only: Restrict to general-purpose registers (AArch64) needed for variadic functions
+#						Without this, the printf implementation in kprintf.c fails.
+# 						Todo: Find root cause of this and remove this flag if possible.
 CFLAGS  = -c -Wall -Wextra -ffreestanding -nostdlib -mgeneral-regs-only
 ASFLAGS = -c -x assembler-with-cpp
 LDFLAGS = -T scripts/linker.ld
@@ -39,17 +42,22 @@ TARGET = $(BUILD_DIR)/images/$(IMG_NAME)
 
 # Source files
 SRCS_C  = $(SRC_DIR)/kernel/allocator/page_allocator.c \
+		  $(SRC_DIR)/kernel/exit/exit.c \
 		  $(SRC_DIR)/kernel/main.c \
 		  $(SRC_DIR)/kernel/drivers/uart.c \
 		  $(SRC_DIR)/kernel/error/panic.c \
 		  $(SRC_DIR)/kernel/error/error_strings.c \
 		  $(SRC_DIR)/kernel/exception_handling/handler.c \
 		  $(SRC_DIR)/kernel/fdt/fdt.c \
+		  $(SRC_DIR)/kernel/page_table/page_table.c \
 		  $(SRC_DIR)/kernel/utils/kprintf.c \
 		  $(SRC_DIR)/kernel/utils/string.c
 
 SRCS_AS = $(SRC_DIR)/boot/boot.s \
 		  $(SRC_DIR)/kernel/exception_handling/vector.s
+
+# only used for formatting and linting
+SRCS_H  = $(shell find $(SRC_DIR) -name '*.h')
 
 OBJS_C  = $(SRCS_C:$(SRC_DIR)/%.c=$(BUILD_DIR)/%.o)
 OBJS_AS = $(SRCS_AS:$(SRC_DIR)/%.s=$(BUILD_DIR)/%.o)
@@ -68,6 +76,13 @@ ifeq ($(BUILD_TYPE),debug)
 else
   CFLAGS += $(RELEASE_FLAGS)
   POST_BUILD = $(VERBOSE_PREFIX)$(STRIP) --strip-all $<
+endif
+
+ifeq ($(TEST),1)
+  CFLAGS += -DRUN_TESTS
+  TEST_SRCS = $(shell find tests/ -name '*.c')
+  TEST_OBJS = $(TEST_SRCS:tests/%.c=$(BUILD_DIR)/tests/%.o)
+  OBJS += $(TEST_OBJS)
 endif
 
 # --- libfdt ---
@@ -91,7 +106,7 @@ LIBFDT_TARGETS := $(addprefix $(BUILD_DIR)/libfdt/, $(LIBFDT_OBJS))
 		clean-subdirs \
 		tools/register_decoder
 
-all: submodules $(TARGET) tools/register_decoder
+all: $(TARGET) tools/register_decoder
 
 submodules:
 	@echo "Ensuring git submodules are initialized..."
@@ -129,19 +144,21 @@ $(BUILD_DIR)/libfdt/%.o: $(LIBFDT_DIR)/%.c
 run: $(TARGET)
 	@echo "Running QEMU..."
 	$(VERBOSE_PREFIX)qemu-system-aarch64 -machine virt \
-	-cpu cortex-a57 -nographic -kernel $(TARGET)
+	-cpu cortex-a57 -nographic -kernel $(TARGET) -no-reboot \
+	-semihosting
 
-format: $(SRCS_C)
+format: $(SRCS_C) $(SRCS_H)
 	@echo "Formatting source files..."
 	$(VERBOSE_PREFIX)clang-format -i $^
+	$(VERBOSE_PREFIX)$(MAKE) -C tools/register_decoder  BUILD_DIR=../../$(BUILD_DIR) format
 
-clang-tidy: $(SRCS_C)
+clang-tidy: $(SRCS_C) $(TEST_SRCS)
 	@echo "Running clang-tidy..."
-	$(VERBOSE_PREFIX)clang-tidy $^ -- $(CFLAGS) $(INCLUDES)
+	$(VERBOSE_PREFIX)clang-tidy $^ -- $(CFLAGS) $(INCLUDES) --target=aarch64-linux-gnu
 
-clang-tidy-fix: $(SRCS_C)
+clang-tidy-fix: $(SRCS_C) $(TEST_SRCS)
 	@echo "Running clang-tidy..."
-	$(VERBOSE_PREFIX)clang-tidy $^ --fix -- $(CFLAGS) $(INCLUDES)
+	$(VERBOSE_PREFIX)clang-tidy $^ --fix -- $(CFLAGS) $(INCLUDES) --target=aarch64-linux-gnu
 
 docs:
 	@echo "Generating Doxygen documentation..."
@@ -155,6 +172,28 @@ clean-docs:
 
 tools/register_decoder:
 	$(VERBOSE_PREFIX)$(MAKE) -C $@  BUILD_DIR=../../$(BUILD_DIR)
+
+$(BUILD_DIR)/tests/%.o: tests/%.c
+	@mkdir -p $(dir $@)
+	@echo "CC  $<"
+	$(VERBOSE_PREFIX)$(CC) $(CFLAGS) $(INCLUDES) -c $< -o $@
+
+test-qemu: $(TARGET)
+	@echo "Running QEMU integration tests..."
+	$(VERBOSE_PREFIX)qemu-system-aarch64 \
+	-machine virt \
+	-cpu cortex-a57 \
+	-nographic \
+	-kernel $(TARGET) \
+	-no-reboot \
+	-semihosting \
+	; EXIT=$$?; \
+	if [ $$EXIT -eq 0 ]; then \
+		echo "Internal tests PASSED"; \
+	else \
+		echo "Internal tests FAILED"; \
+		exit $$EXIT; \
+	fi
 
 clean: clean-docs
 	@echo "Cleaning build directory..."

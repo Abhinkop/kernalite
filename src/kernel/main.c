@@ -14,16 +14,31 @@
 #include "utils/kprintf.h"
 #include "fdt/fdt.h"
 #include "allocator/page_allocator.h"
+#include "page_table/page_table.h"
 
 #include <stdbool.h>
 #include <stdio.h>
 #include <stdint.h>
 
+#ifdef RUN_TESTS
+
+/**
+ * @brief Run internal kernel tests.
+ * * This function is called when the RUN_TESTS flag is set during compilation.
+ * * It executes a suite of internal tests to validate kernel functionality
+ * before proceeding with normal operation. The results of the tests are
+ * printed to the console, and the system exits with an appropriate code based
+ * on the test outcomes.
+ */
+extern void run_internal_tests(void);
+
+#endif /* RUN_TESTS */
+
 static uart_device_t uart0;
 
 /**
  * @brief Captured bootloader arguments.
- * * Stores the raw values of registers x0 through x3 as passed by the 
+ * * Stores the raw values of registers x0 through x3 as passed by the
  * bootloader (e.g., U-Boot) at the moment of kernel entry.
  * * - boot_args[0]: Physical address of the Device Tree Blob (FDT).
  * - boot_args[1]: Reserved (0).
@@ -84,9 +99,12 @@ bool reserve_kerenel_img_pages(void)
  * @brief Kernel Main Entry Point.
  * * Called from primary_entry (boot.s) after the stack has been initialized
  * and the BSS section has been cleared.
- * * @note This function should never return.
+ * @note This function should never return.
+ * @param boot_args_ptr Pointer to an array containing the bootloader arguments
+ * passed in registers x0-x3.
+ * @return exit code
  */
-void main(const uint64_t *boot_args_ptr)
+int main(const uint64_t *boot_args_ptr)
 {
 	pl011_init(&uart0, 0x09000000);
 	set_kprintf_console((serial_t){ .putc = uart0_putchar, .getc = NULL });
@@ -95,19 +113,19 @@ void main(const uint64_t *boot_args_ptr)
 	const void *fdt_addr = (const void *)boot_args_ptr[0];
 	if (!check_fdt(fdt_addr)) {
 		kprintf("FDT validation failed. Halting.\n");
-		return;
+		return 1;
 	}
 
 	Memory_map_t mmap;
 	// NOLINTNEXTLINE(*-int-to-ptr)
 	if (get_mem(fdt_addr, &mmap) < 0) {
 		kprintf("Failed to parse memory map from FDT. Halting.\n");
-		return;
+		return 1;
 	}
 
 	if (mmap.count != 1) {
 		kprintf("Current implementation only supports a single memory region. Halting.\n");
-		return;
+		return 1;
 	}
 
 	print_memory_map(&mmap);
@@ -119,20 +137,21 @@ void main(const uint64_t *boot_args_ptr)
 
 	if (!page_init_result) {
 		kprintf("Failed to initialize page allocator. Halting.\n");
-		return;
+		return 1;
 	}
 
 	if (!reserve_kerenel_img_pages()) {
 		kprintf("Error while reserving kernel binary pages\n");
-		return;
+		return 1;
 	}
+
+#ifdef RUN_TESTS
+	run_internal_tests();
+#endif
 
 	page_dump_status();
 
 	kprintf("Hello World!\n");
 
-	asm volatile(
-		"brk #0"); // Trigger a breakpoint to test exception handling
-	/* System should not return; if it does, boot.s handles it with a halt loop.
-   */
+	return 0; // returns calls exit with code 0.
 }

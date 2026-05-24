@@ -197,8 +197,9 @@ jump_main:
     bl      main                   // Enter C environment
 
 halt:
-    wfe
-    b       halt
+    ldr     x1, =stack_top
+    mov     sp, x1
+    bl       exit
 SYM_CODE_END(primary_entry)
 
 /**
