@@ -9,6 +9,8 @@
 #ifndef TEST_TEST_H
 #define TEST_TEST_H
 
+#include "../src/include/utils/kprintf.h"
+
 #include <stdbool.h>
 #include <stddef.h>
 
@@ -30,5 +32,14 @@ typedef struct test_suite {
 	test_t tests[MAX_TESTS_PER_SUITE];
 	size_t num_tests;
 } test_suite_t;
+
+/** @brief Macro for asserting test conditions. */
+#define EXPECT(cond)                                         \
+	do {                                                 \
+		if (!(cond)) {                               \
+			kprintf("Test failed: %s\n", #cond); \
+			return false;                        \
+		}                                            \
+	} while (0)
 
 #endif /* TEST_TEST_H */

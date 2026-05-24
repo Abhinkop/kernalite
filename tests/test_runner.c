@@ -13,10 +13,10 @@
 #define MAX_TEST_SUITES 10
 
 /**
- * @brief Get a dummy testsuite.
- * @return The dummy test suite.
+ * @brief Get a page table test suite.
+ * @return The page table test suite.
  */
-extern test_suite_t get_dummy_test_suite(void);
+extern test_suite_t get_page_table_test_suite(void);
 
 /**
  * @brief Exit QEMU with a specific code.
@@ -50,7 +50,7 @@ void run_internal_tests(void)
 	size_t num_suites = 0;
 	bool failed = false;
 
-	test_suite[num_suites++] = get_dummy_test_suite();
+	test_suite[num_suites++] = get_page_table_test_suite();
 
 	for (size_t i = 0; i < num_suites; i++) {
 		kprintf("Running test suite: %s\n", test_suite[i].suite_name);
