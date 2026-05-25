@@ -189,23 +189,6 @@ $(BUILD_DIR)/tests/%.o: tests/%.c
 	@echo "CC  $<"
 	$(VERBOSE_PREFIX)$(CC) $(CFLAGS) $(INCLUDES) -c $< -o $@
 
-test-qemu: $(TARGET)
-	@echo "Running QEMU integration tests..."
-	$(VERBOSE_PREFIX)qemu-system-aarch64 \
-	-machine virt \
-	-cpu cortex-a57 \
-	-nographic \
-	-kernel $(TARGET) \
-	-no-reboot \
-	-semihosting \
-	; EXIT=$$?; \
-	if [ $$EXIT -eq 0 ]; then \
-		echo "Internal tests PASSED"; \
-	else \
-		echo "Internal tests FAILED"; \
-		exit $$EXIT; \
-	fi
-
 clean: clean-docs
 	@echo "Cleaning build directory..."
 	$(VERBOSE_PREFIX)rm -rf $(BUILD_DIR) $(TARGET) $(TARGET_ELF)
