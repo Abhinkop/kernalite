@@ -42,4 +42,13 @@ static inline size_t get_image_size(void)
 	return (size_t)(&image_end - &image_start);
 }
 
+/**
+ * @brief Return the root of the id map
+ * @return the pointer to the root of the id map.
+ */
+static inline void *get_id_map_root()
+{
+	return (void *)&idmap_pg_dir_start;
+}
+
 #endif // LINKER_SYMBLOS_H

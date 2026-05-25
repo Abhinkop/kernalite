@@ -10,9 +10,11 @@
  */
 
 #include "drivers/uart.h"
+#include "page_table/page_table.h"
 #include "utils/kprintf.h"
 #include "fdt/fdt.h"
 #include "utils/utils.h"
+#include "linker/symbols.h"
 
 #include <stdbool.h>
 #include <stdio.h>
@@ -83,7 +85,8 @@ void print_memory_map(const Memory_map_t *mmap)
  */
 int main(const uint64_t *boot_args_ptr)
 {
-	pl011_init(&uart0, 0x09000000);
+	virt_addr uart0_base = 0x09000000;
+	pl011_init(&uart0, uart0_base);
 	set_kprintf_console((serial_t){ .putc = uart0_putchar, .getc = NULL });
 
 	// NOLINTNEXTLINE(*-int-to-ptr)
@@ -92,6 +95,23 @@ int main(const uint64_t *boot_args_ptr)
 #ifdef RUN_TESTS
 	run_internal_tests(fdt_addr);
 #endif
+
+	// This needs to done befor setting up the global allocator.
+	// As it sets a page allocator for the static `idmap_pg_dir_start` area
+	if (!setup_kernel_id_map()) {
+		kprintf("Error while setting up id map\n");
+		return 1;
+	}
+
+	// Id map uart before setting up allocator.
+	bool uart_mapped = map_page(get_id_map_root(), uart0_base, uart0_base,
+				    (page_permissions_t){ .execute = false,
+							  .read = true,
+							  .write = true });
+	if (!uart_mapped) {
+		kprintf("Error while id mapping uart\n");
+		return 1;
+	}
 
 	setup_global_allocator(fdt_addr);
 

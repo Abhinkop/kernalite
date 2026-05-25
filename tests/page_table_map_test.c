@@ -1,11 +1,14 @@
 /**
  * @brief Tests for page table mapping functionality.
  * Validates that virtual addresses are correctly mapped to physical addresses
- * with the appropriate permissions, and that the page tables are structured correctly.
+ * with the appropriate permissions, and that the page tables are structured
+ * correctly.
  */
 
 #include "../src/include/page_table/page_table.h"
 #include "../src/include/allocator/page_allocator.h"
+#include "../src/include/linker/symbols.h"
+#include "../src/include/linker/linker_defines.h"
 
 #include "test.h"
 
@@ -125,11 +128,24 @@ bool page_table_map(void)
 	return true;
 }
 
+bool init_page_table_map(void)
+{
+	virt_addr uart0_base = 0x09000000;
+	EXPECT(setup_kernel_id_map());
+	EXPECT(map_page(get_id_map_root(), uart0_base, uart0_base,
+			(page_permissions_t){ .execute = false,
+					      .read = true,
+					      .write = true }))
+	return true;
+}
+
 test_suite_t get_page_table_test_suite(void)
 {
 	test_suite_t suite = { .suite_name = "page_table",
 			       .tests = { { .test_name = "page_table_map",
-					    .test_fn = page_table_map } },
-			       .num_tests = 1 };
+					    .test_fn = page_table_map },
+					  { .test_name = "init_page_table_map",
+					    .test_fn = init_page_table_map } },
+			       .num_tests = 2 };
 	return suite;
 }

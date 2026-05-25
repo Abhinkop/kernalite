@@ -14,7 +14,7 @@
 #define LINKER_PAGE_SIZE 0x1000
 
 /** @brief Number of pages in the identity map */
-#define ID_MAP_NUM_PAGES 0x5
+#define ID_MAP_NUM_PAGES 0x6
 
 /** @brief Size of the identity map */
 #define ID_MAP_SIZE (ID_MAP_NUM_PAGES * LINKER_PAGE_SIZE)

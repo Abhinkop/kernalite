@@ -68,7 +68,8 @@ bool page_init(void *mem_start, size_t mem_size)
 	}
 
 	kprintf("PAGE: Total pages: %u, Bitmap requires: %u bytes (%u pages)\n",
-		total_pages, bitmap_size_bytes);
+		total_pages, bitmap_size_bytes,
+		(bitmap_size_bytes + PAGE_SIZE - 1) / PAGE_SIZE);
 
 	uintptr_t bitmap_start_addr = (uintptr_t)&page_allocator_bit_map_start;
 	kprintf("PAGE: Bit map starts at %lx and ends at %lx\n",
@@ -83,6 +84,8 @@ bool page_init(void *mem_start, size_t mem_size)
 	}
 
 	kprintf("PAGE: Usable memory starts at 0x%lx\n", (uintptr_t)mem_base);
+	kprintf("PAGE: Usable memory ends at 0x%lx\n",
+		(uintptr_t)mem_base + mem_size - 1);
 	return true;
 }
 

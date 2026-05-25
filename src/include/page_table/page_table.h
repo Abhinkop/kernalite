@@ -285,4 +285,10 @@ bool map_page(page_table_t *root, virt_addr v_addr, phy_addr phy_addr,
  */
 void dump_memory_map(page_table_t *root);
 
+/**
+ * @brief Sets up the intial identity kernel map
+ * @return true on success, false on failure (e.g., if allocation fails).
+ */
+bool setup_kernel_id_map();
+
 #endif /* PAGE_TABLE_PAGE_TABLE_H */

@@ -13,6 +13,8 @@
 
 #include "allocator/page_allocator.h"
 #include "utils/kprintf.h"
+#include "linker/symbols.h"
+#include "linker/linker_defines.h"
 
 #include <stddef.h>
 #include <stdint.h>
@@ -266,4 +268,34 @@ void dump_memory_map(page_table_t *root)
 	kprintf("--- Memory Map Dump Start ---\n");
 	dump_memory_map_recursive(root, 0, 0);
 	kprintf("--- Memory Map Dump End ---\n");
+}
+
+bool setup_kernel_id_map()
+{
+	void *idmap_pg_dir_start_addr = get_id_map_root();
+	bool page_init_result =
+		page_init(idmap_pg_dir_start_addr, (size_t)ID_MAP_SIZE);
+	if (!page_init_result) {
+		kprintf("Error while setting up intial static page idmap\n");
+		return false;
+	}
+
+	page_table_t *root = (page_table_t *)page_alloc(1);
+	if (root == NULL || ((void *)root != idmap_pg_dir_start_addr)) {
+		kprintf("Error while allocating intial static page idmap\n");
+		return false;
+	}
+
+	uintptr_t k_start_addr = (uintptr_t)&image_start;
+	while (k_start_addr < (uintptr_t)&image_end) {
+		if (!map_page(root, k_start_addr, k_start_addr,
+			      (page_permissions_t){
+				      .read = 1, .write = 1, .execute = 1 })) {
+			kprintf("Error while mapping intial static page idmap\n");
+			return false;
+		}
+		k_start_addr += PAGE_SIZE;
+	}
+
+	return true;
 }
