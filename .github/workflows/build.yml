@@ -18,7 +18,7 @@ jobs:
 
     # Builds your container and automatically handles GitHub Actions caching
     - name: Build and Cache Docker Image
-      uses: docker/build-push-action@v6
+      uses: docker/build-push-action@v7
       with:
         context: .
         file: .devcontainer/Dockerfile
