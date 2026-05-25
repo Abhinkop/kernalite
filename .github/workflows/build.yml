@@ -30,7 +30,7 @@ jobs:
 
     # Shares the compiled image archive with the next job stage
     - name: Upload Docker Image Archive
-      uses: actions/upload-artifact@v4
+      uses: actions/upload-artifact@v7
       with:
         name: docker-image
         path: /tmp/kernel-dev-env.tar
@@ -72,7 +72,7 @@ jobs:
       run: docker run --rm -v ${{ github.workspace }}:/workspace -w /workspace kernel-dev-env:latest make all
 
     - name: Upload Kernel Artifact
-      uses: actions/upload-artifact@v4
+      uses: actions/upload-artifact@v7
       with:
         name: kernel-binary
         path: build/images/Image
@@ -80,7 +80,7 @@ jobs:
 
     - name: Upload Clang-Tidy Log Artifact
       if: always() # Guarantees logs upload even if your tests crash or fail
-      uses: actions/upload-artifact@v4
+      uses: actions/upload-artifact@v7
       with:
         name: clang-tidy-log
         path: tidy.errors
@@ -122,7 +122,7 @@ jobs:
       run: docker run --rm -v ${{ github.workspace }}:/workspace -w /workspace kernel-dev-env:latest make all TEST=1
 
     - name: Upload Kernel Artifact
-      uses: actions/upload-artifact@v4
+      uses: actions/upload-artifact@v7
       with:
         name: kernel-test-binary
         path: build/images/Image
@@ -130,7 +130,7 @@ jobs:
 
     - name: Upload Clang-Tidy Test Log Artifact
       if: always()
-      uses: actions/upload-artifact@v4
+      uses: actions/upload-artifact@v7
       with:
         name: clang-tidy-test-log
         path: tidy-test.errors
@@ -161,7 +161,7 @@ jobs:
           -semihosting > test_results.log
 
     - name: Upload Test Results Log
-      uses: actions/upload-artifact@v4
+      uses: actions/upload-artifact@v7
       if: always()
       with:
         name: qemu-test-log
@@ -193,7 +193,7 @@ jobs:
           -semihosting > test_results.log
 
     - name: Upload Test Results Log
-      uses: actions/upload-artifact@v4
+      uses: actions/upload-artifact@v7
       if: always()
       with:
         name: qemu-test-log
