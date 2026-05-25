@@ -45,7 +45,8 @@ extern test_suite_t get_linker_symbol_test_suite(void);
  * before proceeding with normal operation. The results of the tests are
  * printed to the console, and the system exits with an appropriate code based
  * on the test outcomes.
- * @param fdt_addr Pointer to the Device Tree Blob (FDT) address passed by the bootloader.
+ * @param fdt_addr Pointer to the Device Tree Blob (FDT) address passed by the
+ * bootloader.
  */
 void run_internal_tests(const void *fdt_addr)
 {

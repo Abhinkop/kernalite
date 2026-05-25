@@ -159,7 +159,7 @@ run: $(TARGET)
 	-cpu cortex-a57 -nographic -kernel $(TARGET) -no-reboot \
 	-semihosting
 
-format: $(SRCS_C) $(SRCS_H)
+format: $(SRCS_C) $(SRCS_H) $(TEST_SRCS)
 	@echo "Formatting source files..."
 	$(VERBOSE_PREFIX)clang-format -i $^
 	$(VERBOSE_PREFIX)$(MAKE) -C tools/register_decoder  BUILD_DIR=../../$(BUILD_DIR) format
