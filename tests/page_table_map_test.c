@@ -1,14 +1,7 @@
 /**
- * Dummy test file for testing the test framework.
- * This file should be compiled and run when the RUN_TESTS flag is set.
- * It contains placeholder tests that can be expanded with actual test logic.
- *
- * To run tests, set the RUN_TESTS flag in the Makefile and compile the kernel.
- * The tests will be executed during kernel initialization, and their results
- * will be printed to the console.
- *
- * Note: This file is intended for demonstration purposes and should be replaced
- * with actual test cases as needed.
+ * @brief Tests for page table mapping functionality.
+ * Validates that virtual addresses are correctly mapped to physical addresses
+ * with the appropriate permissions, and that the page tables are structured correctly.
  */
 
 #include "../src/include/page_table/page_table.h"

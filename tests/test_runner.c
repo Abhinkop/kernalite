@@ -13,12 +13,6 @@
 #define MAX_TEST_SUITES 10
 
 /**
- * @brief Get a page table test suite.
- * @return The page table test suite.
- */
-extern test_suite_t get_page_table_test_suite(void);
-
-/**
  * @brief Exit QEMU with a specific code.
  * @param code The exit code.
  */
@@ -40,6 +34,13 @@ static inline void qemu_exit(uint32_t code)
 }
 
 /**
+ * @breif list of all test suites to run. Each suite contains multiple tests.
+ * The test runner will execute all tests in all suites and report results.
+ */
+extern test_suite_t get_page_table_test_suite(void);
+extern test_suite_t get_linker_symbol_test_suite(void);
+
+/**
  * @brief Run internal kernel tests.
  */
 void run_internal_tests(void)
@@ -51,6 +52,7 @@ void run_internal_tests(void)
 	bool failed = false;
 
 	test_suite[num_suites++] = get_page_table_test_suite();
+	test_suite[num_suites++] = get_linker_symbol_test_suite();
 
 	for (size_t i = 0; i < num_suites; i++) {
 		kprintf("Running test suite: %s\n", test_suite[i].suite_name);
