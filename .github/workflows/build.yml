@@ -138,6 +138,8 @@ jobs:
 
   execute-qemu:
     runs-on: ubuntu-latest
+    env:
+      TEST_RES_FILENAME: "test_results.log"
     needs: build-kernel
     steps:
     - name: Install Native QEMU
@@ -158,18 +160,25 @@ jobs:
           -nographic \
           -kernel ./Image \
           -no-reboot \
-          -semihosting > test_results.log
+          -semihosting > ${{ env.TEST_RES_FILENAME }} 2>&1
+
+    - name: Check and print log
+      run: |
+        test -f ${{ env.TEST_RES_FILENAME }} && \
+        cat ${{ env.TEST_RES_FILENAME }} || echo "Log file not found"
 
     - name: Upload Test Results Log
       uses: actions/upload-artifact@v7
       if: always()
       with:
         name: qemu-test-log
-        path: test_results.log
+        path: ${{ env.TEST_RES_FILENAME }}
         retention-days: 1
 
   execute-qemu-tests:
     runs-on: ubuntu-latest
+    env:
+      TEST_RES_FILENAME: "test_results.log"
     needs: build-test-kernel
     steps:
     - name: Install Native QEMU
@@ -190,12 +199,17 @@ jobs:
           -nographic \
           -kernel ./Image \
           -no-reboot \
-          -semihosting > test_results.log
+          -semihosting > ${{ env.TEST_RES_FILENAME }} 2>&1
+
+    - name: Check and print log
+      run: |
+        test -f ${{ env.TEST_RES_FILENAME }} && \
+        cat ${{ env.TEST_RES_FILENAME }} || echo "Log file not found"
 
     - name: Upload Test Results Log
       uses: actions/upload-artifact@v7
       if: always()
       with:
         name: qemu-test-log
-        path: test_results.log
+        path: ${{ env.TEST_RES_FILENAME }}
         retention-days: 1
