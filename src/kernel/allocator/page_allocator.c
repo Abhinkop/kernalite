@@ -18,7 +18,7 @@
 #include <stdbool.h>
 
 #include "utils/kprintf.h"
-#include "linker/symblos.h"
+#include "linker/symbols.h"
 
 /** @brief Start of the managed memory region */
 static uint8_t *mem_base = NULL;

@@ -9,7 +9,7 @@
  * @date 2026-04-11
  */
 
-#include "linker/symblos.h"
+#include "linker/symbols.h"
 #include "drivers/uart.h"
 #include "utils/kprintf.h"
 #include "fdt/fdt.h"

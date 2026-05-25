@@ -1,5 +1,5 @@
 /**
- * @file symblos.h
+ * @file symbols.h
  * @brief Symbol definitions from the linker script.
  *
  * Declares the linker-provided symbols used by the kernel to locate the image
