@@ -20,11 +20,6 @@
 extern uint8_t page_allocator_bit_map_start[];
 
 /**
- * @brief End of the page allocator bitmap.
- */
-extern uint8_t page_allocator_bit_map_end[];
-
-/**
  * @brief Image start and end symbols provided by the linker script.
  *
  * These are linker-defined symbols and do not occupy storage; treat them
