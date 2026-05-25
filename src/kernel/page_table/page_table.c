@@ -26,8 +26,8 @@
  * @param addr Physical address of the next level page table (must be page
  * aligned).
  */
-inline void set_page_table_entry_address(page_table_entry_t *entry,
-					 phy_addr addr)
+static inline void set_page_table_entry_address(page_table_entry_t *entry,
+						phy_addr addr)
 {
 	// Mask for bits [47:12]
 	const uint64_t addr_mask = 0xFFFFFFFFF000UL;
@@ -39,7 +39,8 @@ inline void set_page_table_entry_address(page_table_entry_t *entry,
  * @param entry Pointer to the page table entry.
  * @return The physical address.
  */
-inline phy_addr get_page_table_entry_address(const page_table_entry_t *entry)
+static inline phy_addr
+get_page_table_entry_address(const page_table_entry_t *entry)
 {
 	// Shift to align address to bits [47:12]
 	return ((phy_addr)entry->nlta_47_12 << PAGE_SHIFT);
