@@ -34,6 +34,9 @@ SECTIONS
 
     /* Linux pattern: Group early structures and enforce strict page alignment */
     .data.page_tables : ALIGN(LINKER_PAGE_SIZE) {
+        idmap_pg_dir_start = .;
+        . += ID_MAP_SIZE;
+
         page_allocator_bit_map_start = .;
         . += LINKER_BITMAP_SIZE; /* 64 KiB for the page bitmap */
     } :data_perm
@@ -48,7 +51,4 @@ SECTIONS
 
     /* Image end symbol: address one past the last byte of the linked image */
     image_end = .;
-
-    /* Provide an easily-retrievable image size symbol (in bytes). */
-    PROVIDE(image_size = image_end - image_start);
 }

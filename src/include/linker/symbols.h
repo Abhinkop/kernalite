@@ -15,6 +15,11 @@
 #include <stddef.h>
 
 /**
+ * @brief Start of the identity map page directory pages.
+ */
+extern uint8_t idmap_pg_dir_start[];
+
+/**
  * @brief Start of the page allocator bitmap.
  */
 extern uint8_t page_allocator_bit_map_start[];
