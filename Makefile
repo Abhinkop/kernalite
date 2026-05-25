@@ -8,7 +8,15 @@ STRIP   = $(CROSS_COMPILE)strip
 
 IMG_NAME ?= Image
 
-INCLUDES = -Isrc/include
+# Project structure
+BUILD_DIR ?= build
+SRC_DIR   = src
+
+INCLUDES = -I$(SRC_DIR)/include
+
+LINKER_LDS_SCRIPT = $(SRC_DIR)/include/linker/linker.lds
+LINKER_LD_SCRIPT = $(LINKER_LDS_SCRIPT:%.lds=$(BUILD_DIR)/linker.ld)
+LINKER_PRE_PROCESSOR_FLAGS = -E -P -x c
 
 # Flags
 # -Wall -Wextra: Enable all warnings
@@ -19,14 +27,10 @@ INCLUDES = -Isrc/include
 # 						Todo: Find root cause of this and remove this flag if possible.
 CFLAGS  = -c -Wall -Wextra -ffreestanding -nostdlib -mgeneral-regs-only
 ASFLAGS = -c -x assembler-with-cpp
-LDFLAGS = -T scripts/linker.ld
+LDFLAGS = -T $(LINKER_LD_SCRIPT)
 
 DEBUG_FLAGS = -g
 RELEASE_FLAGS = -O3
-
-# Project structure
-BUILD_DIR ?= build
-SRC_DIR   = src
 
 # build type: debug or release (default: release)
 BUILD_TYPE = release
@@ -131,8 +135,15 @@ $(BUILD_DIR)/%.o: $(SRC_DIR)/%.s
 	@echo "CC  $<"
 	$(VERBOSE_PREFIX)$(CC) $(ASFLAGS) $(INCLUDES) $< -o $@
 
+# Preprocess the linker script to resolve symbols and generate
+# the final linker script used for linking
+$(LINKER_LD_SCRIPT): $(LINKER_LDS_SCRIPT)
+	@mkdir -p $(dir $@)
+	@echo "Processing linker script..."
+	$(VERBOSE_PREFIX)$(CC) $(LINKER_PRE_PROCESSOR_FLAGS) $(INCLUDES) $< -o $@
+
 # Link the kernel
-$(TARGET_ELF): $(OBJS) $(LIBFDT_TARGETS)
+$(TARGET_ELF): $(OBJS) $(LIBFDT_TARGETS) $(LINKER_LD_SCRIPT)
 	@mkdir -p $(dir $@)
 	@echo "LD  $@"
 	$(VERBOSE_PREFIX)$(LD) $(LDFLAGS) $(OBJS) $(LIBFDT_TARGETS) -o $@

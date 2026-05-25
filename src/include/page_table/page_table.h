@@ -12,14 +12,15 @@
 #ifndef PAGE_TABLE_PAGE_TABLE_H
 #define PAGE_TABLE_PAGE_TABLE_H
 
+#include "linker/linker_defines.h"
+
 #include <stdint.h>
 #include <stdbool.h>
 
 /**
  * @brief Size of each memory page in bytes.
- * from  table D4-20 in the Armv8-A architecture reference manual.
  */
-#define PAGE_SIZE 4096
+#define PAGE_SIZE LINKER_PAGE_SIZE
 
 /**
  * @brief Number of pointers per page table.
