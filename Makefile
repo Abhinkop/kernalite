@@ -55,7 +55,8 @@ SRCS_C  = $(SRC_DIR)/kernel/allocator/page_allocator.c \
 		  $(SRC_DIR)/kernel/fdt/fdt.c \
 		  $(SRC_DIR)/kernel/page_table/page_table.c \
 		  $(SRC_DIR)/kernel/utils/kprintf.c \
-		  $(SRC_DIR)/kernel/utils/string.c
+		  $(SRC_DIR)/kernel/utils/string.c \
+		  $(SRC_DIR)/kernel/utils/utils.c
 
 SRCS_AS = $(SRC_DIR)/boot/boot.s \
 		  $(SRC_DIR)/kernel/exception_handling/vector.s
