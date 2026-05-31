@@ -6,19 +6,21 @@
  * allocator bootstrapping, and the transition into the kernel runtime loop.
  *
  * @author Abhin Parekadan Jose
- * @date 2026-04-11
+ * @date 2026-04-25
  */
 
-#include "linker/symblos.h"
 #include "drivers/uart.h"
+#include "page_table/page_table.h"
 #include "utils/kprintf.h"
 #include "fdt/fdt.h"
-#include "allocator/page_allocator.h"
-#include "page_table/page_table.h"
+#include "utils/utils.h"
+#include "linker/symbols.h"
+#include "mmu/mmu.h"
 
 #include <stdbool.h>
 #include <stdio.h>
 #include <stdint.h>
+#include <libfdt.h>
 
 #ifdef RUN_TESTS
 
@@ -29,8 +31,10 @@
  * before proceeding with normal operation. The results of the tests are
  * printed to the console, and the system exits with an appropriate code based
  * on the test outcomes.
+ * @param fdt_addr Pointer to the Device Tree Blob (FDT) address passed by the
+ * bootloader.
  */
-extern void run_internal_tests(void);
+extern void run_internal_tests(const void *fdt_addr);
 
 #endif /* RUN_TESTS */
 
@@ -73,29 +77,6 @@ void print_memory_map(const Memory_map_t *mmap)
 }
 
 /**
- * @brief Reserve pages occupied by the kernel image.
- * * This function calculates the number of pages occupied by the kernel
- * image based on the linker-provided symbols and reserves those pages in
- * the page allocator to prevent them from being allocated for other purposes.
- * * @return bool True if reservation was successful, false otherwise.
- */
-bool reserve_kerenel_img_pages(void)
-{
-	size_t img_size = get_image_size();
-	size_t num_pages = (img_size + PAGE_SIZE - 1) / PAGE_SIZE;
-	void *img_start = (void *)&image_start;
-
-	kprintf("Reserving kernel image pages: start=%p, size=0x%lx bytes, pages=%u\n",
-		img_start, img_size, num_pages);
-
-	if (!reserve_page(img_start, num_pages)) {
-		kprintf("Failed to reserve kernel image pages. Halting.\n");
-		return false;
-	}
-	return true;
-}
-
-/**
  * @brief Kernel Main Entry Point.
  * * Called from primary_entry (boot.s) after the stack has been initialized
  * and the BSS section has been cleared.
@@ -106,50 +87,49 @@ bool reserve_kerenel_img_pages(void)
  */
 int main(const uint64_t *boot_args_ptr)
 {
-	pl011_init(&uart0, 0x09000000);
+	virt_addr uart0_base = 0x09000000;
+	pl011_init(&uart0, uart0_base);
 	set_kprintf_console((serial_t){ .putc = uart0_putchar, .getc = NULL });
 
 	// NOLINTNEXTLINE(*-int-to-ptr)
 	const void *fdt_addr = (const void *)boot_args_ptr[0];
-	if (!check_fdt(fdt_addr)) {
-		kprintf("FDT validation failed. Halting.\n");
-		return 1;
-	}
-
-	Memory_map_t mmap;
-	// NOLINTNEXTLINE(*-int-to-ptr)
-	if (get_mem(fdt_addr, &mmap) < 0) {
-		kprintf("Failed to parse memory map from FDT. Halting.\n");
-		return 1;
-	}
-
-	if (mmap.count != 1) {
-		kprintf("Current implementation only supports a single memory region. Halting.\n");
-		return 1;
-	}
-
-	print_memory_map(&mmap);
-
-	// NOLINTBEGIN(*-int-to-ptr)
-	bool page_init_result =
-		page_init((void *)mmap.regions[0].base, mmap.regions[0].size);
-	// NOLINTEND(*-int-to-ptr)
-
-	if (!page_init_result) {
-		kprintf("Failed to initialize page allocator. Halting.\n");
-		return 1;
-	}
-
-	if (!reserve_kerenel_img_pages()) {
-		kprintf("Error while reserving kernel binary pages\n");
-		return 1;
-	}
 
 #ifdef RUN_TESTS
-	run_internal_tests();
+	run_internal_tests(fdt_addr);
 #endif
 
-	page_dump_status();
+	// This needs to done befor setting up the global allocator.
+	// As it sets a page allocator for the static `idmap_pg_dir_start` area
+	if (!setup_kernel_id_map()) {
+		kprintf("Error while setting up id map\n");
+		return 1;
+	}
+
+	// Id map uart before setting up allocator.
+	bool uart_mapped =
+		map_page(get_id_map_root(), uart0_base, uart0_base,
+			 (page_permissions_t){ .execute = false,
+					       .read = true,
+					       .write = true,
+					       .user_accessible = false },
+			 device);
+	if (!uart_mapped) {
+		kprintf("Error while id mapping uart\n");
+		return 1;
+	}
+
+	dump_memory_map(get_id_map_root());
+
+	kprintf("fdt adrr = 0x%lx size = 0x%lx\n", (virt_addr)fdt_addr,
+		fdt_totalsize(fdt_addr));
+
+	if (!enable_mmu((page_table_t *)get_id_map_root())) {
+		kprintf("Error while setting up mmu\n");
+		return 1;
+	}
+
+	// setup_global_allocator(fdt_addr);
+	// Do this after setting up the kernal high maapings.
 
 	kprintf("Hello World!\n");
 
