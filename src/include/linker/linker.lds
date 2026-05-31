@@ -1,6 +1,7 @@
 #include "linker/linker_defines.h"
 
-#define KERNEL_LOAD_ADDR 0x40000000
+/* QEMU virt loads raw Image at RAM_BASE + 0x80000 = 0x40080000 */
+#define KERNEL_LOAD_ADDR 0x40080000
 
 ENTRY(primary_entry)
 
@@ -13,7 +14,6 @@ PHDRS
 
 SECTIONS
 {
-    /* QEMU loads the kernel at 0x40000000 for aarch64 virt */
     . = KERNEL_LOAD_ADDR;
 
     /* Image start symbol: address of the first byte of the linked image */
